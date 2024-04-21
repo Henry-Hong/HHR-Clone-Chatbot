@@ -5,8 +5,8 @@ export default function ImageResponseCard({ msg }: { msg: TypeImageResponseCard 
   const buttons = msg.buttons;
   return (
     <Flex className="gap-1">
-      {buttons?.map((button) => (
-        <OptionButton button={button} />
+      {buttons?.map((button, i) => (
+        <OptionButton key={`option-button-${i}`} button={button} />
       ))}
     </Flex>
   );

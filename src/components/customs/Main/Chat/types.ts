@@ -4,8 +4,8 @@ export type TypeImageResponseCardButton = {
 };
 
 export type TypeImageResponseCard = {
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
   buttons?: TypeImageResponseCardButton[];
 };
 

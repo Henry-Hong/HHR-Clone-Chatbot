@@ -16,8 +16,8 @@ export default function Main({ chats }: { chats: TypeChat[] }) {
       as="main"
       className="w-full h-full p-5 mt-[64px] pt-[26px] pb-[64px] overflow-y-scroll gap-4 z-0"
     >
-      {chats.map((chat) => (
-        <Chat chat={chat} />
+      {chats.map((chat, i) => (
+        <Chat key={`chat-${i}`} chat={chat} />
       ))}
       <div ref={bottomRef} />
     </Flex>
