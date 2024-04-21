@@ -1,14 +1,11 @@
-import { useChatMutation } from "./apis";
-import Flex from "@/components/cores/Flex";
-import "./index.css";
+import Flex from '@/components/cores/Flex';
+import './index.css';
+import Footer from '@/components/customs/Footer';
 
 function App() {
-  const { mutate, data, isPending } = useChatMutation();
   return (
-    <Flex className="flex flex-col bg-gray-100 w-screen h-dvh">
-      <div>{isPending ? "pending" : "done"}</div>
-      <button onClick={() => mutate("안녕")}>click me</button>
-      <div>{JSON.stringify(data)}</div>
+    <Flex variants="verticalCenter" className="bg-gray-100 w-screen h-dvh relative overflow-y-scroll">
+      <Footer></Footer>
     </Flex>
   );
 }
