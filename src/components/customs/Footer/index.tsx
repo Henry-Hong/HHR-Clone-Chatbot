@@ -4,18 +4,50 @@ import Input from '@/components/cores/Input';
 import { useState } from 'react';
 import SendButton from './SendButton';
 import HomeButton from './HomeButton';
+import { TypeAddChat, TypeChat, TypeResponseChat } from '../Main/Chat/types';
 
-interface IFooterProps {}
-
-export default function Footer({}: IFooterProps) {
-  const { data, isPending, mutate: sendUserChat } = useChatMutation();
+export default function Footer({ addChat }: { addChat: TypeAddChat }) {
+  const { isPending, mutateAsync: sendUserChat } = useChatMutation();
 
   const [text, setText] = useState('');
 
-  const handleClickSend = () => {
+  const clearText = () => setText('');
+
+  const createReqChatFromMessage = (message: string): TypeChat => {
+    return {
+      type: 'user',
+      chat: { message },
+    };
+  };
+
+  const createMyChatFromResponse = (response: TypeResponseChat): TypeChat => {
+    return {
+      type: 'me',
+      chat: response,
+    };
+  };
+
+  const createMyChayChatFromError = (error: any): TypeChat => {
+    return {
+      type: 'me',
+      chat: {
+        messages: [
+          {
+            contentType: 'PlainText',
+            content: '다시 한번 시도해주세요.',
+          },
+        ],
+      },
+    };
+  };
+
+  const handleClickSendBtn = () => {
     if (text) {
-      sendUserChat(text);
-      setText('');
+      addChat(createReqChatFromMessage(text));
+      sendUserChat(text)
+        .then((myChatResponse) => addChat(createMyChatFromResponse(myChatResponse)))
+        .catch((error) => addChat(createMyChayChatFromError(error)));
+      clearText();
     }
   };
 
@@ -27,7 +59,7 @@ export default function Footer({}: IFooterProps) {
         className="rounded-full py-2 px-4"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        rightComponent={<SendButton isPending={isPending} onClick={handleClickSend} />}
+        rightComponent={<SendButton isPending={isPending} onClick={handleClickSendBtn} />}
       ></Input>
     </Flex>
   );
