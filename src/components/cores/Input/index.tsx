@@ -21,7 +21,9 @@ export default function TextInput({
 }
 
 TextInput.Input = function Input({ className, ...rest }: { className?: string }) {
-  return <input type="text" className={tw('outline-none w-full bg-inherit text-inherit', className)} {...rest} />;
+  return (
+    <input type="text" autoFocus className={tw('outline-none w-full bg-inherit text-inherit', className)} {...rest} />
+  );
 };
 
 TextInput.Textarea = function Textarea({ className, ...rest }: { className?: string }) {
@@ -37,6 +39,7 @@ TextInput.Textarea = function Textarea({ className, ...rest }: { className?: str
   return (
     <textarea
       ref={ref}
+      autoFocus
       className={tw('resize-none outline-none w-full bg-inherit text-inherit', className)}
       {...rest}
     />
