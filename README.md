@@ -36,8 +36,8 @@ FrontEnd + AWS Services
 # Teams
 
 | <img src="https://avatars.githubusercontent.com/u/17701725?v=4,Henry-Hong,heerim,https://github.com/Henry-Hong" width="150" height="150"/> | <img src="https://avatars.githubusercontent.com/u/17701725?v=4,Henry-Hong,heerim,https://github.com/Henry-Hong" width="150" height="150"/> |
-| :----------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------: |
-|                                     FrontEnd: heerim<br/>[@Henry-Hong](https://github.com/Henry-Hong)                                      |                                   Cloud Related: heerim<br/>[@Henry-Hong](https://github.com/Henry-Hong)                                   |
+| :-: | :-: |
+| FrontEnd: heerim<br/>[@Henry-Hong](https://github.com/Henry-Hong) | Cloud Related: heerim<br/>[@Henry-Hong](https://github.com/Henry-Hong) |
 
 <br>
 <br>

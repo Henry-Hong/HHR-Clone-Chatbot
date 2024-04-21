@@ -1,28 +1,28 @@
-import { cva } from "class-variance-authority";
-import React, { ComponentPropsWithoutRef, ElementType } from "react";
-import { twMerge as tw } from "tailwind-merge";
+import { cva } from 'class-variance-authority';
+import React, { ComponentPropsWithoutRef, ElementType } from 'react';
+import { twMerge as tw } from 'tailwind-merge';
 
 type TypeFlexVariants =
-  | "verticalLeft"
-  | "verticalCenter"
-  | "verticalRight"
-  | "horizontalLeft"
-  | "horizontalCenter"
-  | "horizontalRight";
+  | 'verticalLeft'
+  | 'verticalCenter'
+  | 'verticalRight'
+  | 'horizontalLeft'
+  | 'horizontalCenter'
+  | 'horizontalRight';
 
-const FlexVariants = cva("flex", {
+const FlexVariants = cva('flex', {
   variants: {
     intents: {
-      verticalLeft: "flex-col items-start",
-      verticalCenter: "flex-col items-center",
-      verticalRight: "flex-col items-end",
-      horizontalLeft: " justify-start items-center",
-      horizontalCenter: " justify-center items-center",
-      horizontalRight: " justify-end items-center",
+      verticalLeft: 'flex-col items-start',
+      verticalCenter: 'flex-col items-center',
+      verticalRight: 'flex-col items-end',
+      horizontalLeft: ' justify-start items-center',
+      horizontalCenter: ' justify-center items-center',
+      horizontalRight: ' justify-end items-center',
     },
   },
   defaultVariants: {
-    intents: "horizontalLeft",
+    intents: 'horizontalLeft',
   },
 });
 
@@ -33,19 +33,16 @@ type TypeFlexProps<T extends ElementType> = {
   className?: string;
 } & ComponentPropsWithoutRef<T>;
 
-export default function Flex<T extends ElementType = "div">({
+export default function Flex<T extends ElementType = 'div'>({
   children,
   as,
   variants,
   className,
   ...rest
 }: TypeFlexProps<T>) {
-  const Component = as || "div";
+  const Component = as || 'div';
   return (
-    <Component
-      className={tw(FlexVariants({ intents: variants }), className)}
-      {...rest}
-    >
+    <Component className={tw(FlexVariants({ intents: variants }), className)} {...rest}>
       {children}
     </Component>
   );
