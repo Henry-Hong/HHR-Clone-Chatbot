@@ -1,13 +1,14 @@
 import Flex from '@/components/cores/Flex';
 import Footer from '@/components/customs/Footer';
 import { useState } from 'react';
-import Main from './components/customs/Main';
-import './index.css';
-import { TypeChat, TypeAddChat } from './components/customs/Main/Chat/types';
 import Header from './components/customs/Header';
+import Main from './components/customs/Main';
+import { TypeAddChat, TypeChat } from './components/customs/Main/Chat/types';
+import { INITIAL_CHAT } from './consts';
+import './index.css';
 
 function App() {
-  const [chats, setChats] = useState<TypeChat[]>([]);
+  const [chats, setChats] = useState<TypeChat[]>([INITIAL_CHAT]);
 
   const addChat: TypeAddChat = (chat: TypeChat) => {
     setChats((prevChats) => [...prevChats, chat]);

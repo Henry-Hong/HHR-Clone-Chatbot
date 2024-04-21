@@ -3,25 +3,25 @@ import ImageResponseCard from './ImageResponseCard';
 import PlainText from './PlainText';
 import { TypeChat, TypeRequestChat, TypeResponseChat } from './types';
 import React from 'react';
-import Fallback from './Fallback';
+import FallbackIntent from './FallbackIntent';
 
-export default function Chat({ chat }: { chat: TypeChat }) {
+export default function Chat({ chat, ...rest }: { chat: TypeChat; isLast: boolean }) {
   const Component = chat.type === 'me' ? Chat.MyChat : Chat.UserChat;
-  return <Component chat={chat} />;
+  return <Component chat={chat} {...rest} />;
 }
 
-Chat.MyChat = function ({ chat }: { chat: TypeChat }) {
+Chat.MyChat = function ({ chat, isLast }: { chat: TypeChat; isLast: boolean }) {
   const myChat = chat.chat as TypeResponseChat;
   const isEmpty = myChat.messages.length === 0 ? true : false;
   return (
     <Flex variants="verticalLeft" className="gap-2">
-      {isEmpty && <Fallback />}
+      {isEmpty && <FallbackIntent isLast={isLast} />}
       {!isEmpty &&
         myChat.messages.map((msg, i) => (
           <React.Fragment key={`res-${i}`}>
-            {msg.contentType === 'PlainText' && <PlainText key={`res-text-${i}`} msg={msg.content} />}
+            {msg.contentType === 'PlainText' && <PlainText key={`res-text-${i}`} isLast={isLast} msg={msg.content} />}
             {msg.contentType === 'ImageResponseCard' && (
-              <ImageResponseCard key={`res-image-${i}`} msg={msg.imageResponseCard} />
+              <ImageResponseCard isLast={isLast} key={`res-image-${i}`} msg={msg.imageResponseCard} />
             )}
           </React.Fragment>
         ))}
