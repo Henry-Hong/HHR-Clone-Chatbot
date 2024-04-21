@@ -13,8 +13,10 @@ export default function Chat({ chat, ...rest }: { chat: TypeChat; isLast: boolea
 Chat.MyChat = function ({ chat, isLast }: { chat: TypeChat; isLast: boolean }) {
   const myChat = chat.chat as TypeResponseChat;
   const isEmpty = myChat.messages.length === 0 ? true : false;
+  const confidence = myChat.metadatas?.confidence;
+
   return (
-    <Flex variants="verticalLeft" className="gap-2">
+    <Flex variants="verticalLeft" className="gap-2 group">
       {isEmpty && <FallbackIntent isLast={isLast} />}
       {!isEmpty &&
         myChat.messages.map((msg, i) => (
@@ -25,6 +27,11 @@ Chat.MyChat = function ({ chat, isLast }: { chat: TypeChat; isLast: boolean }) {
             )}
           </React.Fragment>
         ))}
+      {confidence && (
+        <Flex as="p" className="group-hover:opacity-100 opacity-0 transition-all text-xs text-gray-400">
+          이해도: {confidence}
+        </Flex>
+      )}
     </Flex>
   );
 };
