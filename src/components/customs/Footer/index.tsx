@@ -10,7 +10,6 @@ export default function Footer({ addChat }: { addChat: TypeAddChat }) {
   const { isPending, mutateAsync: sendUserChat } = useChatMutation();
 
   const [text, setText] = useState('');
-
   const clearText = () => setText('');
 
   const createReqChatFromMessage = (message: string): TypeChat => {
@@ -27,14 +26,14 @@ export default function Footer({ addChat }: { addChat: TypeAddChat }) {
     };
   };
 
-  const createMyChayChatFromError = (error: any): TypeChat => {
+  const createMyChayChatFromError = (): TypeChat => {
     return {
       type: 'me',
       chat: {
         messages: [
           {
             contentType: 'PlainText',
-            content: '다시 한번 시도해주세요.',
+            content: '다시 한번 말씀해주세요.',
           },
         ],
       },
@@ -46,7 +45,7 @@ export default function Footer({ addChat }: { addChat: TypeAddChat }) {
       addChat(createReqChatFromMessage(text));
       sendUserChat(text)
         .then((myChatResponse) => addChat(createMyChatFromResponse(myChatResponse)))
-        .catch((error) => addChat(createMyChayChatFromError(error)));
+        .catch(() => addChat(createMyChayChatFromError()));
       clearText();
     }
   };
@@ -55,12 +54,12 @@ export default function Footer({ addChat }: { addChat: TypeAddChat }) {
     <Flex className="fixed bottom-0 bg-white w-full h-[60px] pl-4 pr-2 py-2 gap-2">
       <HomeButton onClick={() => {}} />
       <Input
-        wrapperClassName="w-full h-full p-0 bg-gray-100 focus:outline-blue-300 rounded-full"
+        wrapperClassName="w-full h-full p-0 bg-gray-100 focus:outline-blue-400 rounded-full"
         className="rounded-full py-2 px-4"
         value={text}
         onChange={(e) => setText(e.target.value)}
         rightComponent={<SendButton isPending={isPending} onClick={handleClickSendBtn} />}
-      ></Input>
+      />
     </Flex>
   );
 }

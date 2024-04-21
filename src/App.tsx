@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Main from './components/customs/Main';
 import './index.css';
 import { TypeChat, TypeAddChat } from './components/customs/Main/Chat/types';
+import Header from './components/customs/Header';
 
 function App() {
   const [chats, setChats] = useState<TypeChat[]>([]);
@@ -13,7 +14,8 @@ function App() {
   };
 
   return (
-    <Flex variants="verticalCenter" className="bg-white w-screen h-dvh relative overflow-y-scroll">
+    <Flex variants="verticalCenter" className="bg-white w-screen h-dvh relative">
+      <Header />
       <Main chats={chats} />
       <Footer addChat={addChat} />
     </Flex>
