@@ -16,7 +16,7 @@ Chat.MyChat = function ({ chat, isLast }: { chat: TypeChat; isLast: boolean }) {
   const confidence = myChat.metadatas?.confidence;
 
   return (
-    <Flex variants="verticalLeft" className="gap-2 group">
+    <Flex variants="verticalLeft" className="gap-2 group shrink-0 max-w-[90%]">
       {isEmpty && <FallbackIntent isLast={isLast} />}
       {!isEmpty &&
         myChat.messages.map((msg, i) => (
