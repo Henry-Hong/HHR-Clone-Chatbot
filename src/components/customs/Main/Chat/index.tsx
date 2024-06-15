@@ -27,7 +27,7 @@ Chat.MyChat = function ({ chat, isLast }: { chat: TypeChat; isLast: boolean }) {
             )}
           </React.Fragment>
         ))}
-      {confidence && (
+      {!!confidence && (
         <Flex as="p" className="group-hover:opacity-100 opacity-0 transition-all text-xs text-gray-400">
           이해도: {confidence}
         </Flex>
