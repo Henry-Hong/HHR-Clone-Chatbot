@@ -4,6 +4,7 @@ import PlainText from './PlainText';
 import { TypeChat, TypeRequestChat, TypeResponseChat } from './types';
 import React from 'react';
 import FallbackIntent from './FallbackIntent';
+import Avatar from '@/components/cores/Avatar';
 
 export default function Chat({ chat, ...rest }: { chat: TypeChat; isLast: boolean }) {
   const Component = chat.type === 'me' ? Chat.MyChat : Chat.UserChat;
@@ -16,19 +17,22 @@ Chat.MyChat = function ({ chat, isLast }: { chat: TypeChat; isLast: boolean }) {
   const confidence = myChat.metadatas?.confidence;
 
   return (
-    <Flex variants="verticalLeft" className="gap-2 group shrink-0 max-w-[90%]">
-      {isEmpty && <FallbackIntent isLast={isLast} />}
-      {!isEmpty &&
-        myChat.messages.map((msg, i) => (
-          <React.Fragment key={`res-${i}`}>
-            {msg.contentType === 'PlainText' && <PlainText key={`res-text-${i}`} isLast={isLast} msg={msg.content} />}
-            {msg.contentType === 'ImageResponseCard' && (
-              <ImageResponseCard isLast={isLast} key={`res-image-${i}`} msg={msg.imageResponseCard} />
-            )}
-          </React.Fragment>
-        ))}
-      <Flex as="p" className="group-hover:opacity-100 opacity-0 transition-all text-xs text-gray-400">
-        {!!confidence && `이해도: ${confidence}`}
+    <Flex className="items-start gap-3">
+      <Avatar />
+      <Flex variants="verticalLeft" className="gap-2 group shrink-0 max-w-[90%]">
+        {isEmpty && <FallbackIntent isLast={isLast} />}
+        {!isEmpty &&
+          myChat.messages.map((msg, i) => (
+            <React.Fragment key={`res-${i}`}>
+              {msg.contentType === 'PlainText' && <PlainText key={`res-text-${i}`} isLast={isLast} msg={msg.content} />}
+              {msg.contentType === 'ImageResponseCard' && (
+                <ImageResponseCard isLast={isLast} key={`res-image-${i}`} msg={msg.imageResponseCard} />
+              )}
+            </React.Fragment>
+          ))}
+        <Flex as="p" className="group-hover:opacity-100 opacity-0 transition-all text-xs text-gray-400">
+          {!!confidence && `이해도: ${confidence}`}
+        </Flex>
       </Flex>
     </Flex>
   );
