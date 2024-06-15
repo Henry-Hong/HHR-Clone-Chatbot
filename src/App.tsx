@@ -10,7 +10,7 @@ import { AppContext } from './context';
 
 function App() {
   const [chats, setChats] = useState<TypeChat[]>([INITIAL_CHAT]);
-  const addChat: TypeAddChat = (chat: TypeChat) => {
+  const addChat: TypeAddChat = (chat) => {
     setChats((prevChats) => [...prevChats, chat]);
   };
 
@@ -20,11 +20,11 @@ function App() {
   };
 
   return (
-    <AppContext.Provider value={{ clickedBtns, addClickedBtn }}>
+    <AppContext.Provider value={{ clickedBtns, addClickedBtn, addChat }}>
       <Flex variants="verticalCenter" className="bg-white w-screen h-dvh relative">
         <Header />
         <Main chats={chats} />
-        <Footer addChat={addChat} />
+        <Footer />
       </Flex>
     </AppContext.Provider>
   );

@@ -4,6 +4,8 @@ import { twMerge } from 'tailwind-merge';
 import { useAppContext } from '@/context';
 import _ from 'lodash';
 import Svg from '@/components/cores/Svg';
+import { useChatMutation } from '@/apis';
+import { createMyChatFromResponse, createMyChayChatFromError } from '@/utils';
 
 export default function ImageResponseCard({ msg, isLast }: { msg: TypeImageResponseCard; isLast: boolean }) {
   const buttons = msg.buttons;
@@ -54,10 +56,15 @@ OptionButton.Btn = function Btn({ button, isLast }: { button: TypeImageResponseC
   const { clickedBtns, addClickedBtn } = useAppContext();
   const isClicked = clickedBtns.some((btn) => btn === button.value);
 
+  const { addChat } = useAppContext();
+  const { mutateAsync: sendUserChat } = useChatMutation();
+
   const handleClickBtn = (value: string) => {
-    if (!isClicked) {
-      addClickedBtn(value);
-    }
+    if (isClicked) return;
+    addClickedBtn(value);
+    sendUserChat(value)
+      .then((myChatResponse) => addChat(createMyChatFromResponse(myChatResponse)))
+      .catch(() => addChat(createMyChayChatFromError()));
   };
 
   return (

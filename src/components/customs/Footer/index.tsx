@@ -4,46 +4,15 @@ import Input from '@/components/cores/Input';
 import { useEffect, useRef, useState } from 'react';
 import SendButton from './SendButton';
 import HomeButton from './HomeButton';
-import { TypeAddChat, TypeChat, TypeResponseChat } from '../Main/Chat/types';
+import { useAppContext } from '@/context';
+import { createMyChatFromResponse, createMyChayChatFromError, createReqChatFromMessage } from '@/utils';
 
-export default function Footer({ addChat }: { addChat: TypeAddChat }) {
+export default function Footer() {
+  const { addChat } = useAppContext();
   const { isPending, mutateAsync: sendUserChat } = useChatMutation();
 
   const [text, setText] = useState('');
   const clearText = () => setText('');
-
-  const inputRef = useRef<HTMLInputElement>(null);
-  const focusInput = () => {
-    inputRef.current?.focus();
-  };
-
-  const createReqChatFromMessage = (message: string): TypeChat => {
-    return {
-      type: 'user',
-      chat: { message },
-    };
-  };
-
-  const createMyChatFromResponse = (response: TypeResponseChat): TypeChat => {
-    return {
-      type: 'me',
-      chat: response,
-    };
-  };
-
-  const createMyChayChatFromError = (): TypeChat => {
-    return {
-      type: 'me',
-      chat: {
-        messages: [
-          {
-            contentType: 'PlainText',
-            content: '다시 한번 말씀해주세요.',
-          },
-        ],
-      },
-    };
-  };
 
   const handleClickSendBtn = () => {
     if (!isPending && text) {
@@ -55,8 +24,13 @@ export default function Footer({ addChat }: { addChat: TypeAddChat }) {
     }
   };
 
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autoFocusOnInput = () => {
+    inputRef.current?.focus();
+  };
+
   useEffect(() => {
-    if (!isPending) focusInput();
+    if (!isPending) autoFocusOnInput();
   }, [isPending]);
 
   return (
