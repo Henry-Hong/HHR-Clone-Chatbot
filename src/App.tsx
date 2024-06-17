@@ -42,9 +42,9 @@ function App() {
       const myChatResponse = await waitAtLeast(1500, sendUserChat(msg)); // TODO: make it Generic
       if (inputMsg) addChat(createReqChatFromMessage(inputMsg));
       addChat(createMyChatFromResponse(myChatResponse as TypeResponseChat));
-    } catch {
+    } catch (error) {
       if (inputMsg) addChat(createReqChatFromMessage(inputMsg));
-      addChat(createMyChayChatFromError());
+      addChat(createMyChayChatFromError(error));
     }
   };
 

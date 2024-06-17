@@ -32,8 +32,10 @@ export const useSampleQuery = () => {
 
 export const useChatMutation = () => {
   return useMutation({
-    mutationFn: (text: string) => {
-      return apis.post('', { text });
+    mutationFn: async (text: string) => {
+      const response = await apis.post('', { text });
+      if (response?.errorType) throw new Error(response.errorMessage);
+      return response;
     },
   });
 };
