@@ -56,7 +56,7 @@ OptionButton.Btn = function Btn({ button, isLast }: { button: TypeImageResponseC
   return (
     <button
       type="submit"
-      name="message"
+      name="btnMsg"
       value={button.value}
       onClick={() => setTimeout(() => addClickedBtn(button.value))}
       className={twMerge(

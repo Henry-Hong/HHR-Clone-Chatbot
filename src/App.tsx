@@ -8,7 +8,13 @@ import { TypeAddChat, TypeChat, TypeChatSource, TypeResponseChat } from './compo
 import { INITIAL_CHAT } from './consts';
 import { AppContext } from './contexts';
 import './index.css';
-import { createMyChatFromResponse, createMyChatLoadingMsg, createMyChayChatFromError, waitAtLeast } from './utils';
+import {
+  createMyChatFromResponse,
+  createMyChatLoadingMsg,
+  createMyChayChatFromError,
+  createReqChatFromMessage,
+  waitAtLeast,
+} from './utils';
 
 function App() {
   const { mutateAsync: sendUserChat } = useChatMutation();
@@ -23,14 +29,21 @@ function App() {
   };
 
   const onSubmit = async (formData: FormData) => {
-    const message = formData.get('message') as string;
-    if (clickedBtns.includes(message)) return;
+    const btnMsg = formData.get('btnMsg') as string;
+    if (clickedBtns.includes(btnMsg)) return;
 
+    const inputMsg = formData.get('inputMsg') as string;
+    if (inputMsg) addOptiChats(createReqChatFromMessage(inputMsg));
     addOptiChats(createMyChatLoadingMsg());
+
+    const msg = btnMsg || inputMsg;
+
     try {
-      const myChatResponse = await waitAtLeast(1500, sendUserChat(message)); // TODO: make it Generic
+      const myChatResponse = await waitAtLeast(1500, sendUserChat(msg)); // TODO: make it Generic
+      if (inputMsg) addChat(createReqChatFromMessage(inputMsg));
       addChat(createMyChatFromResponse(myChatResponse as TypeResponseChat));
     } catch {
+      if (inputMsg) addChat(createReqChatFromMessage(inputMsg));
       addChat(createMyChayChatFromError());
     }
   };

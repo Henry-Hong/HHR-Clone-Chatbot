@@ -1,10 +1,10 @@
 import Svg from '@/components/cores/Svg';
 import { twMerge } from 'tailwind-merge';
 
-export default function SendButton({ onClick, isPending }: { isPending: boolean; onClick: () => void }) {
+export default function SendButton({ isPending }: { isPending: boolean }) {
   return (
     <button
-      onClick={() => onClick()}
+      type="submit"
       disabled={isPending ? true : false}
       className={twMerge('mr-2 hover:bg-gray-200 rounded-full p-1 text-blue-400', isPending && 'cursor-not-allowed')}
     >
