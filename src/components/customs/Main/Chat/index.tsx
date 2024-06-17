@@ -5,6 +5,7 @@ import { TypeChat, TypeChatSource } from './types';
 import React from 'react';
 import FallbackIntent from './FallbackIntent';
 import Avatar from '@/components/cores/Avatar';
+import { motion } from 'framer-motion';
 import LoadingMsg from './LoadingMsg';
 
 export default function Chat({ chat, ...rest }: { chat: TypeChat<TypeChatSource>; isLast: boolean }) {
@@ -26,13 +27,18 @@ Chat.MyChat = function ({ chat, isLast }: { chat: TypeChat<'me'>; isLast: boolea
         {isEmpty && <FallbackIntent isLast={isLast} />}
         {!isEmpty &&
           myChat.messages?.map((msg, i) => (
-            <React.Fragment key={`res-${i}`}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              key={`res-${i}`}
+            >
               {msg.contentType === 'LoadingMsg' && <LoadingMsg key={`res-loading-${i}`} />}
               {msg.contentType === 'PlainText' && <PlainText key={`res-text-${i}`} isLast={isLast} msg={msg.content} />}
               {msg.contentType === 'ImageResponseCard' && (
                 <ImageResponseCard isLast={isLast} key={`res-image-${i}`} msg={msg.imageResponseCard} />
               )}
-            </React.Fragment>
+            </motion.div>
           ))}
         <Flex as="p" className="group-hover:opacity-100 opacity-0 transition-all text-xs text-gray-400">
           {!!confidence && `이해도: ${confidence}`}

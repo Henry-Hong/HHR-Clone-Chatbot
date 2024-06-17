@@ -14,6 +14,7 @@
     "@tanstack/react-query": "^5.29.2",
     "@tanstack/react-query-devtools": "^5.29.2",
     "class-variance-authority": "^0.7.0",
+    "framer-motion": "12.0.0-alpha.0",
     "lodash": "^4.17.21",
     "react": "19.0.0-rc-fb9a90fa48-20240614",
     "react-dom": "19.0.0-rc-fb9a90fa48-20240614",
