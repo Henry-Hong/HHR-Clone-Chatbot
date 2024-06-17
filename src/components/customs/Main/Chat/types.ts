@@ -20,6 +20,10 @@ export type TypePlainTextMessage = {
   contentType: 'PlainText';
 };
 
+export type TypeLoadingMessage = {
+  contentType: 'LoadingMsg';
+};
+
 export type TypeChatSource = 'user' | 'me';
 
 export type TypeRequestChat = {
@@ -27,13 +31,13 @@ export type TypeRequestChat = {
 };
 
 export type TypeResponseChat = {
-  messages: (TypeImageResponseCardMessage | TypePlainTextMessage)[];
+  messages?: (TypeImageResponseCardMessage | TypePlainTextMessage | TypeLoadingMessage)[];
   metadatas?: { confidence: number };
 };
 
-export type TypeChat = {
-  type: TypeChatSource;
-  chat: TypeRequestChat | TypeResponseChat;
+export type TypeChat<T extends TypeChatSource> = {
+  type: T;
+  chat: T extends 'user' ? TypeRequestChat : TypeResponseChat;
 };
 
-export type TypeAddChat = (chat: TypeChat) => void;
+export type TypeAddChat = (chat: TypeChat<'me' | 'user'>) => void;

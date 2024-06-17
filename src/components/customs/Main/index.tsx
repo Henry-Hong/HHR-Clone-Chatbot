@@ -1,9 +1,9 @@
 import Flex from '@/components/cores/Flex';
 import Chat from './Chat';
-import { TypeChat } from './Chat/types';
+import { TypeChat, TypeChatSource } from './Chat/types';
 import { useEffect, useRef } from 'react';
 
-export default function Main({ chats }: { chats: TypeChat[] }) {
+export default function Main({ chats }: { chats: TypeChat<TypeChatSource>[] }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

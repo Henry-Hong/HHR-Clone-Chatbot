@@ -4,7 +4,7 @@ import { useOptimistic, useState } from 'react';
 import { useChatMutation } from './apis';
 import Header from './components/customs/Header';
 import Main from './components/customs/Main';
-import { TypeAddChat, TypeChat, TypeResponseChat } from './components/customs/Main/Chat/types';
+import { TypeAddChat, TypeChat, TypeChatSource, TypeResponseChat } from './components/customs/Main/Chat/types';
 import { INITIAL_CHAT } from './consts';
 import { AppContext } from './contexts';
 import './index.css';
@@ -13,8 +13,10 @@ import { createMyChatFromResponse, createMyChatLoadingMsg, createMyChayChatFromE
 function App() {
   const { mutateAsync: sendUserChat } = useChatMutation();
 
-  const [chats, setChats] = useState<TypeChat[]>([INITIAL_CHAT]);
-  const [optiChats, addOptiChats] = useOptimistic(chats, (prev, newChat) => prev.concat(newChat as TypeChat));
+  const [chats, setChats] = useState<TypeChat<TypeChatSource>[]>([INITIAL_CHAT]);
+  const [optiChats, addOptiChats] = useOptimistic(chats, (prev, newChat) =>
+    prev.concat(newChat as TypeChat<TypeChatSource>)
+  );
 
   const addChat: TypeAddChat = (chat) => {
     setChats((prevChats) => [...prevChats, chat]);

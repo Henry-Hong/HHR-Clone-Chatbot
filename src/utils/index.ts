@@ -1,20 +1,20 @@
 import { TypeChat, TypeResponseChat } from '../components/customs/Main/Chat/types';
 
-export const createReqChatFromMessage = (message: string): TypeChat => {
+export const createReqChatFromMessage = (message: string): TypeChat<'user'> => {
   return {
     type: 'user',
     chat: { message },
   };
 };
 
-export const createMyChatFromResponse = (response: TypeResponseChat): TypeChat => {
+export const createMyChatFromResponse = (response: TypeResponseChat): TypeChat<'me'> => {
   return {
     type: 'me',
     chat: response,
   };
 };
 
-export const createMyChayChatFromError = (): TypeChat => {
+export const createMyChayChatFromError = (): TypeChat<'me'> => {
   return {
     type: 'me',
     chat: {
@@ -28,14 +28,13 @@ export const createMyChayChatFromError = (): TypeChat => {
   };
 };
 
-export const createMyChatLoadingMsg = (): TypeChat => {
+export const createMyChatLoadingMsg = (): TypeChat<'me'> => {
   return {
     type: 'me',
     chat: {
       messages: [
         {
-          contentType: 'PlainText',
-          content: '..',
+          contentType: 'LoadingMsg',
         },
       ],
     },

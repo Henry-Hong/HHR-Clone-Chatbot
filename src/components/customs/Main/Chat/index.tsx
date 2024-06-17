@@ -1,19 +1,22 @@
 import Flex from '@/components/cores/Flex';
 import ImageResponseCard from './ImageResponseCard';
 import PlainText from './PlainText';
-import { TypeChat, TypeRequestChat, TypeResponseChat } from './types';
+import { TypeChat, TypeChatSource } from './types';
 import React from 'react';
 import FallbackIntent from './FallbackIntent';
 import Avatar from '@/components/cores/Avatar';
+import LoadingMsg from './LoadingMsg';
 
-export default function Chat({ chat, ...rest }: { chat: TypeChat; isLast: boolean }) {
-  const Component = chat.type === 'me' ? Chat.MyChat : Chat.UserChat;
+export default function Chat({ chat, ...rest }: { chat: TypeChat<TypeChatSource>; isLast: boolean }) {
+  let Component: React.ElementType = Chat.MyChat;
+  if (chat.type === 'user') Component = Chat.UserChat;
   return <Component chat={chat} {...rest} />;
 }
 
-Chat.MyChat = function ({ chat, isLast }: { chat: TypeChat; isLast: boolean }) {
-  const myChat = chat.chat as TypeResponseChat;
-  const isEmpty = myChat.messages.length === 0 ? true : false;
+Chat.MyChat = function ({ chat, isLast }: { chat: TypeChat<'me'>; isLast: boolean }) {
+  const myChat = chat.chat;
+
+  const isEmpty = myChat.messages?.length === 0 ? true : false;
   const confidence = myChat.metadatas?.confidence;
 
   return (
@@ -22,8 +25,9 @@ Chat.MyChat = function ({ chat, isLast }: { chat: TypeChat; isLast: boolean }) {
       <Flex variants="verticalLeft" className="gap-2 group shrink-0 w-full">
         {isEmpty && <FallbackIntent isLast={isLast} />}
         {!isEmpty &&
-          myChat.messages.map((msg, i) => (
+          myChat.messages?.map((msg, i) => (
             <React.Fragment key={`res-${i}`}>
+              {msg.contentType === 'LoadingMsg' && <LoadingMsg key={`res-loading-${i}`} />}
               {msg.contentType === 'PlainText' && <PlainText key={`res-text-${i}`} isLast={isLast} msg={msg.content} />}
               {msg.contentType === 'ImageResponseCard' && (
                 <ImageResponseCard isLast={isLast} key={`res-image-${i}`} msg={msg.imageResponseCard} />
@@ -38,8 +42,8 @@ Chat.MyChat = function ({ chat, isLast }: { chat: TypeChat; isLast: boolean }) {
   );
 };
 
-Chat.UserChat = function ({ chat }: { chat: TypeChat }) {
-  const userChat = chat.chat as TypeRequestChat;
+Chat.UserChat = function ({ chat }: { chat: TypeChat<'user'> }) {
+  const userChat = chat.chat;
   return (
     <Flex
       variants="verticalRight"

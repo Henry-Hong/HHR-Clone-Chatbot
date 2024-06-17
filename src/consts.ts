@@ -1,6 +1,6 @@
 import { TypeChat } from './components/customs/Main/Chat/types';
 
-export const INITIAL_CHAT: TypeChat = {
+export const INITIAL_CHAT: TypeChat<'me'> = {
   type: 'me',
   chat: {
     messages: [

@@ -21,7 +21,7 @@ export default {
           width: '10rem',
           content: "''",
           background: 'linear-gradient(to right, transparent 0%, #E8E8E8 50%, transparent 100%)',
-          animation: 'skeletonloading 1.5s cubic-bezier(0.4, 0.0, 0.2, 1) infinite',
+          animation: 'skeletonloading 1s cubic-bezier(0.4, 0.0, 0.2, 1) infinite',
         },
         '@keyframes skeletonloading': {
           from: {
