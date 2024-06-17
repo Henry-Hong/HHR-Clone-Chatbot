@@ -4,8 +4,6 @@ import { twMerge } from 'tailwind-merge';
 import { useAppContext } from '@/context';
 import _ from 'lodash';
 import Svg from '@/components/cores/Svg';
-import { useChatMutation } from '@/apis';
-import { createMyChatFromResponse, createMyChayChatFromError } from '@/utils';
 
 export default function ImageResponseCard({ msg, isLast }: { msg: TypeImageResponseCard; isLast: boolean }) {
   const buttons = msg.buttons;
@@ -55,21 +53,12 @@ OptionButton.Link = function Link({ button }: { button: TypeImageResponseCardBut
 OptionButton.Btn = function Btn({ button, isLast }: { button: TypeImageResponseCardButton; isLast: boolean }) {
   const { clickedBtns, addClickedBtn } = useAppContext();
   const isClicked = clickedBtns.some((btn) => btn === button.value);
-
-  const { addChat } = useAppContext();
-  const { mutateAsync: sendUserChat } = useChatMutation();
-
-  const handleClickBtn = (value: string) => {
-    if (isClicked) return;
-    addClickedBtn(value);
-    sendUserChat(value)
-      .then((myChatResponse) => addChat(createMyChatFromResponse(myChatResponse)))
-      .catch(() => addChat(createMyChayChatFromError()));
-  };
-
   return (
     <button
-      onClick={() => handleClickBtn(button.value)}
+      type="submit"
+      name="message"
+      value={button.value}
+      onClick={() => setTimeout(() => addClickedBtn(button.value))}
       className={twMerge(
         'rounded-full p-1 px-3 border-[1.5px] text-gray-500 transition-all hover:bg-gray-100 shrink-0',
         isLast ? 'border-blue-400' : 'border-blue-200',
