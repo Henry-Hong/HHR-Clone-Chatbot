@@ -1,62 +1,46 @@
 import Flex from '@/components/cores/Flex';
 import Footer from '@/components/customs/Footer';
 import { useOptimistic, useState } from 'react';
+import { useChatMutation } from './apis';
 import Header from './components/customs/Header';
 import Main from './components/customs/Main';
-import { TypeAddChat, TypeChat } from './components/customs/Main/Chat/types';
+import { TypeAddChat, TypeChat, TypeResponseChat } from './components/customs/Main/Chat/types';
 import { INITIAL_CHAT } from './consts';
+import { AppContext } from './contexts';
 import './index.css';
-import { AppContext } from './context';
-import { useChatMutation } from './apis';
-import { createMyChatFromResponse, createMyChayChatFromError } from './utils';
+import { createMyChatFromResponse, createMyChatLoadingMsg, createMyChayChatFromError, waitAtLeast } from './utils';
 
 function App() {
   const { mutateAsync: sendUserChat } = useChatMutation();
 
   const [chats, setChats] = useState<TypeChat[]>([INITIAL_CHAT]);
-  const [optChats, addOptChats] = useOptimistic(chats, (prev, newChat) => prev.concat(newChat as TypeChat));
+  const [optiChats, addOptiChats] = useOptimistic(chats, (prev, newChat) => prev.concat(newChat as TypeChat));
 
   const addChat: TypeAddChat = (chat) => {
     setChats((prevChats) => [...prevChats, chat]);
-  };
-
-  const [clickedBtns, setClickedBtns] = useState<string[]>([]);
-  const addClickedBtn = (btnValue: string) => {
-    setClickedBtns((prevBtnValues) => [...prevBtnValues, btnValue]);
   };
 
   const onSubmit = async (formData: FormData) => {
     const message = formData.get('message') as string;
     if (clickedBtns.includes(message)) return;
 
-    const chat: TypeChat = {
-      type: 'me',
-      chat: {
-        messages: [
-          {
-            contentType: 'PlainText',
-            content: '..',
-          },
-        ],
-      },
-    };
-
-    addOptChats(chat);
-    const delay = (ms: number = 5000) => new Promise((resolve) => setTimeout(resolve, ms));
-
+    addOptiChats(createMyChatLoadingMsg());
     try {
-      const [myChatResponse] = await Promise.all([sendUserChat(message), delay(1500)]);
-      addChat(createMyChatFromResponse(myChatResponse));
+      const myChatResponse = await waitAtLeast(1500, sendUserChat(message)); // TODO: make it Generic
+      addChat(createMyChatFromResponse(myChatResponse as TypeResponseChat));
     } catch {
       addChat(createMyChayChatFromError());
     }
   };
 
+  const [clickedBtns, setClickedBtns] = useState<string[]>([]);
+  const addClickedBtn = (btnValue: string) => setClickedBtns((prevBtnValues) => [...prevBtnValues, btnValue]);
+
   return (
     <AppContext.Provider value={{ clickedBtns, addClickedBtn, addChat }}>
       <Flex as="form" action={onSubmit} variants="verticalCenter" className="bg-white w-screen h-dvh relative">
         <Header />
-        <Main chats={optChats} />
+        <Main chats={optiChats} />
         <Footer />
       </Flex>
     </AppContext.Provider>

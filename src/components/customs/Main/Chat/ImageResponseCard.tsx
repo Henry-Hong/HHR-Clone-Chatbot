@@ -1,7 +1,7 @@
 import Flex from '@/components/cores/Flex';
 import { TypeImageResponseCard, TypeImageResponseCardButton } from './types';
 import { twMerge } from 'tailwind-merge';
-import { useAppContext } from '@/context';
+import { useAppContext } from '@/contexts';
 import _ from 'lodash';
 import Svg from '@/components/cores/Svg';
 

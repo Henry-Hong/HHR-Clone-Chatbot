@@ -4,7 +4,7 @@ import Input from '@/components/cores/Input';
 import { useEffect, useRef, useState } from 'react';
 import SendButton from './SendButton';
 import HomeButton from './HomeButton';
-import { useAppContext } from '@/context';
+import { useAppContext } from '@/contexts';
 import { createMyChatFromResponse, createMyChayChatFromError, createReqChatFromMessage } from '@/utils';
 
 export default function Footer() {

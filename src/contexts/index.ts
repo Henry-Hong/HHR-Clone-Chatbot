@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { TypeAddChat } from './components/customs/Main/Chat/types';
+import { TypeAddChat } from '../components/customs/Main/Chat/types';
 
 interface IAppContext {
   clickedBtns: string[];
