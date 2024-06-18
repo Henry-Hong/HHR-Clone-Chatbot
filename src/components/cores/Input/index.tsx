@@ -11,6 +11,7 @@ const TextInput = forwardRef<HTMLInputElement, IInputProps>(function (
     <Flex variants="horizontalCenter" className={tw(wrapperClassName)}>
       {leftComponent}
       <input
+        autoComplete="off"
         ref={ref}
         type="text"
         autoFocus
