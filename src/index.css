@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+mark {
+  background-color: transparent;
+  font-weight: bold;
+  background-image: linear-gradient(90deg, #7dd3fc, #6ee7b7);
+  background-position: bottom;
+  background-size: 100% 30%;
+  background-repeat: no-repeat;
+}

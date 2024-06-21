@@ -6,7 +6,7 @@ export const INITIAL_CHAT: TypeChat<'me'> = {
     messages: [
       {
         contentType: 'PlainText',
-        content: '안녕하세요! FrontEnd Engineer 홍희림입니다.',
+        content: '<p>안녕하세요! <mark>FrontEnd Engineer 홍희림</mark>입니다.</p>',
       },
       {
         contentType: 'PlainText',
@@ -20,6 +20,12 @@ export const INITIAL_CHAT: TypeChat<'me'> = {
             { value: '이력서', text: '이력서' },
             { value: '포트폴리오', text: '포트폴리오' },
           ],
+        },
+      },
+      {
+        contentType: 'ImageResponseCard',
+        imageResponseCard: {
+          buttons: [{ value: '시스템 구조', text: '어떻게 만들었어?' }],
         },
       },
     ],
