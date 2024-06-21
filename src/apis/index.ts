@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { preload } from 'react-dom';
 
 const BASE_URL = 'https://2bs7x43h1j.execute-api.ap-northeast-2.amazonaws.com/v1';
 
@@ -35,6 +36,8 @@ export const useChatMutation = () => {
     mutationFn: async (text: string) => {
       const response = await apis.post('', { text });
       if (response?.errorType) throw new Error(response.errorMessage);
+      const imageUrl = response?.messages?.[0]?.imageResponseCard?.imageUrl;
+      if (imageUrl) preload(imageUrl, { as: 'image' });
       return response;
     },
   });
