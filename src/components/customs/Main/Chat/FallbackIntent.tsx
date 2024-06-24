@@ -13,7 +13,7 @@ export default function FallbackIntent({ isLast }: { isLast: boolean }) {
           buttons: [
             {
               text: '자주 묻는 질문 보기',
-              value: uuidRef.current,
+              value: `자주 묻는 질문 보기 ${uuidRef.current}`,
             },
           ],
         }}

@@ -54,6 +54,7 @@ function App() {
   return (
     <AppContext.Provider value={{ clickedBtns, addClickedBtn, addChat }}>
       <Flex as="form" action={onSubmit} variants="verticalCenter" className="bg-white w-screen h-dvh relative">
+        <button /> {/* for preventing implicit submit */}
         <Header />
         <Main chats={optiChats} />
         <Footer />

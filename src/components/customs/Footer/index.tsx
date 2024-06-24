@@ -26,7 +26,7 @@ export default function Footer() {
 
   return (
     <Flex className="fixed bottom-0 bg-white w-full h-[60px] pl-4 pr-2 py-2 gap-2">
-      <HomeButton onClick={() => {}} />
+      <HomeButton />
       <Input
         placeholder="궁금한점을 입력해주세요."
         autoFocus
