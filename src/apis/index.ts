@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { TypeImageResponseCardMessage } from '@/components/customs/Main/Chat/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { preload } from 'react-dom';
 
@@ -36,8 +37,12 @@ export const useChatMutation = () => {
     mutationFn: async (text: string) => {
       const response = await apis.post('', { text });
       if (response?.errorType) throw new Error(response.errorMessage);
-      const imageUrl = response?.messages?.[0]?.imageResponseCard?.imageUrl;
-      if (imageUrl) preload(imageUrl, { as: 'image' });
+      const imageUrls = response?.messages?.map(
+        (message: TypeImageResponseCardMessage) => message?.imageResponseCard?.imageUrl
+      );
+      if (imageUrls) {
+        imageUrls.forEach((url: string) => preload(url, { as: 'image' }));
+      }
       return response;
     },
   });
