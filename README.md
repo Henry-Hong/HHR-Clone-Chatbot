@@ -1,7 +1,7 @@
 # NLU Based 홍희림 클론
 
 <p align="center">
-이미지가 들어올 예정입니다.
+ <img width="300" alt="chatbot-preview" src="https://github.com/user-attachments/assets/95a8b9d0-7401-4f05-819e-6e3f61e27e4f">
 </p>
 
 # Introduction
@@ -21,7 +21,8 @@ FrontEnd + AWS Services
 # Architecture
 
 <p align="center">
-이미지가 들어올 예정입니다.
+<img width="450" alt="HHR+Chatbot+Architecture" src="https://github.com/user-attachments/assets/5c1b212d-eafb-4700-92cd-637d576160bc">
+
 </p>
 
 # Features
@@ -29,6 +30,8 @@ FrontEnd + AWS Services
 ### 1. i18n (internationalization)
 
 ### 2. Amazon Lex
+
+### 3. React@19 (Canary)
 
 <br >
 <br >
