@@ -33,6 +33,17 @@ export default function Header() {
                     ),
                 }}
               />
+              <Svg
+                iconName="ic_linkedin"
+                svgProps={{
+                  className: 'w-10 h-10 cursor-pointer hover:opacity-80',
+                  onClick: () =>
+                    window.open(
+                      'https://www.linkedin.com/in/heerim/',
+                      '_blank'
+                    ),
+                }}
+              />
             </Flex>
             <Flex className="w-full">
               <Dialog.Cancel
