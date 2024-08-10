@@ -31,6 +31,7 @@ export type TypeRequestChat = {
 };
 
 export type TypeResponseChat = {
+  errorMessage?: string;
   messages?: (TypeImageResponseCardMessage | TypePlainTextMessage | TypeLoadingMessage)[];
   metadatas?: { confidence: number };
 };
