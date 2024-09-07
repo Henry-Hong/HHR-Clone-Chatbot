@@ -1,0 +1,15 @@
+name: Cron job for preventing cold start
+
+on: 
+  schedule:
+    # - cron: '0 1-8 * * *' # 한국기준 오전10시 - 오후5시 매 시간 실행
+    - cron: '* * * * *'
+
+jobs:
+  cron: 
+    runs-on: ubuntu-latest
+    steps: 
+      - name: health check to chatbot
+        run: curl -s https://bit.ly/3xeR3N5
+      - name: health check to chatbot2
+        run: curl -s https://bit.ly/4cl07yH
