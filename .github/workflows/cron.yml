@@ -10,4 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
       - name: health check to chatbot
-        run: curl -s https://bit.ly/3xeR3N5
+        run: curl -L https://bit.ly/3xeR3N5
