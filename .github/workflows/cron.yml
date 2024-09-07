@@ -11,5 +11,3 @@ jobs:
     steps: 
       - name: health check to chatbot
         run: curl -s https://bit.ly/3xeR3N5
-      - name: health check to chatbot2
-        run: curl -s https://bit.ly/4cl07yH
