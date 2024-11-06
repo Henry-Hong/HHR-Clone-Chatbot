@@ -1,7 +1,7 @@
 import Flex from '@/components/cores/Flex';
 import ImageResponseCard from './ImageResponseCard';
 import PlainText from './PlainText';
-import { TypeChat, TypeChatSource } from './types';
+import { TypeChat, TypeChatSource } from '@/types';
 import React from 'react';
 import FallbackIntent from './FallbackIntent';
 import Avatar from '@/components/cores/Avatar';

@@ -1,4 +1,4 @@
-import { TypeChat, TypeResponseChat } from '../components/customs/Main/Chat/types';
+import { TypeChat, TypeResponseChat } from '@/types';
 
 export const createReqChatFromMessage = (message: string): TypeChat<'user'> => {
   return {

@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { TypeImageResponseCardMessage } from '@/components/customs/Main/Chat/types';
+import { TypeImageResponseCardMessage, TypeResponseChat } from '@/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { preload } from 'react-dom';
 
@@ -10,7 +9,7 @@ const createOptions = (method: string): RequestInit => ({
   headers: { 'Content-Type': 'application/json' },
 });
 
-const fetchApi = (method: string, path: string, body?: any) => {
+const fetchApi = <T>(method: string, path: string, body?: unknown): Promise<T> => {
   const options = createOptions(method);
   if (body) {
     options.body = JSON.stringify(body);
@@ -19,10 +18,10 @@ const fetchApi = (method: string, path: string, body?: any) => {
 };
 
 const apis = {
-  get: (path: string) => fetchApi('GET', path),
-  delete: (path: string) => fetchApi('DELETE', path),
-  post: (path: string, body: any) => fetchApi('POST', path, body),
-  put: (path: string, body: any) => fetchApi('PUT', path, body),
+  get: <T>(path: string) => fetchApi<T>('GET', path),
+  delete: <T>(path: string) => fetchApi<T>('DELETE', path),
+  post: <T>(path: string, body: unknown) => fetchApi<T>('POST', path, body),
+  put: <T>(path: string, body: unknown) => fetchApi<T>('PUT', path, body),
 };
 
 export const useSampleQuery = () => {
@@ -35,11 +34,11 @@ export const useSampleQuery = () => {
 export const useChatMutation = () => {
   return useMutation({
     mutationFn: async (text: string) => {
-      const response = await apis.post('', { text });
+      const response = await apis.post<TypeResponseChat>('', { text });
       if (response?.errorType) throw new Error(response.errorMessage);
-      const imageUrls = response?.messages?.map(
-        (message: TypeImageResponseCardMessage) => message?.imageResponseCard?.imageUrl
-      );
+      
+      const imageUrls = response?.messages?.map((message) => message);
+
       if (imageUrls) {
         imageUrls.forEach((url: string) => preload(url, { as: 'image' }));
       }

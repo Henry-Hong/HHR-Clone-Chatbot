@@ -6,7 +6,7 @@ import { useAppContext } from '@/contexts';
 import _ from 'lodash';
 import { Fragment } from 'react/jsx-runtime';
 import { twMerge } from 'tailwind-merge';
-import { TypeImageResponseCard, TypeImageResponseCardButton } from './types';
+import { TypeImageResponseCard, TypeImageResponseCardButton } from '@/types';
 
 export default function ImageResponseCard({ msg, isLast }: { msg: TypeImageResponseCard; isLast: boolean }) {
   const hasImage = !!msg.imageUrl;

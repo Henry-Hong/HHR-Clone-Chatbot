@@ -1,10 +1,10 @@
 import Flex from '@/components/cores/Flex';
 import Footer from '@/components/customs/Footer';
+import Header from '@/components/customs/Header';
+import Main from '@/components/customs/Main';
 import { useOptimistic, useState } from 'react';
 import { useChatMutation } from './apis';
-import Header from './components/customs/Header';
-import Main from './components/customs/Main';
-import { TypeAddChat, TypeChat, TypeChatSource, TypeResponseChat } from './components/customs/Main/Chat/types';
+import { TypeAddChat, TypeChat, TypeChatSource, TypeResponseChat } from '@/types';
 import { INITIAL_CHAT } from './consts';
 import { AppContext } from './contexts';
 import './index.css';

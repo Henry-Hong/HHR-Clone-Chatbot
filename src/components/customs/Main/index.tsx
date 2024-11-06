@@ -1,6 +1,6 @@
 import Flex from '@/components/cores/Flex';
 import Chat from './Chat';
-import { TypeChat, TypeChatSource } from './Chat/types';
+import { TypeChat, TypeChatSource } from '@/types';
 import { useEffect, useRef } from 'react';
 
 export default function Main({ chats }: { chats: TypeChat<TypeChatSource>[] }) {

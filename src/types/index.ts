@@ -41,4 +41,4 @@ export type TypeChat<T extends TypeChatSource> = {
   chat: T extends 'user' ? TypeRequestChat : TypeResponseChat;
 };
 
-export type TypeAddChat = (chat: TypeChat<'me' | 'user'>) => void;
+export type TypeAddChat = (chat: TypeChat<TypeChatSource>) => void;
