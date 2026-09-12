@@ -1,5 +1,5 @@
 import Flex from '@/components/cores/Flex';
-import Robot from '/img_robot.gif';
+const Robot = '/img_robot.gif';
 import Dialog from '@/components/cores/Dialog';
 import Svg from '@/components/cores/Svg';
 import LabeldText from './LabldText';

@@ -15,7 +15,7 @@
  *   SESSION_SALT        sessionId 해시용 솔트
  */
 
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { LexRuntimeV2Client, RecognizeTextCommand } from '@aws-sdk/client-lex-runtime-v2';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
@@ -169,7 +169,19 @@ export const parseEvent = (event) => {
   const text = String(payload.text ?? '').trim();
   const requested = String(payload.locale ?? '').toLowerCase();
   const locale = LEX_LOCALE_ID[requested] ? requested : DEFAULT_LOCALE;
-  const sessionId = String(payload.sessionId ?? 'anonymous');
+
+  /**
+   * sessionId가 없으면 매 요청마다 새로 만든다.
+   *
+   * 예전 구현은 `event.sessionId ?? "random-sessionid-1541"` 처럼 상수를 썼는데,
+   * 그러면 sessionId를 안 보내는 모든 방문자가 Lex 세션 하나를 공유하게 된다.
+   * 동시 접속 시 Lex가 ConflictException("Concurrent Client Requests")을 던지고
+   * 사용자는 답변 대신 fallback을 보게 된다.
+   *
+   * 이 봇은 인텐트가 전부 독립적이라 세션 연속성이 필요 없으므로,
+   * 없을 땐 임의값을 쓰는 편이 안전하다.
+   */
+  const sessionId = payload.sessionId ? String(payload.sessionId) : `anon-${randomUUID()}`;
 
   return { text, locale, sessionId };
 };

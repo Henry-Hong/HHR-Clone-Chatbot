@@ -17,7 +17,8 @@
     "lex:publish": "node scripts/content-to-lex.mjs && bash scripts/publish-lex.sh",
     "gen:ui": "node scripts/gen-ui-content.mjs",
     "predev": "node scripts/gen-ui-content.mjs",
-    "prebuild": "node scripts/gen-ui-content.mjs"
+    "prebuild": "node scripts/gen-ui-content.mjs",
+    "admin": "vite --config vite.admin.config.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.29.2",

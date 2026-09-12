@@ -196,3 +196,16 @@ test('toLegacyMessages: 실제 content 전체를 변환해도 깨지지 않는�
     }
   }
 });
+
+/* --------------------- sessionId 공유 방지 (회귀 테스트) ------------------- */
+
+test('parseEvent: sessionId가 없으면 매 요청 고유값을 만든다', () => {
+  const a = parseEvent({ text: 'x' });
+  const b = parseEvent({ text: 'x' });
+  assert.notEqual(a.sessionId, b.sessionId, '기본 sessionId가 상수면 모든 방문자가 Lex 세션을 공유하게 된다');
+  assert.match(a.sessionId, /^anon-/);
+});
+
+test('parseEvent: sessionId가 오면 그대로 쓴다', () => {
+  assert.equal(parseEvent({ text: 'x', sessionId: 'abc' }).sessionId, 'abc');
+});
