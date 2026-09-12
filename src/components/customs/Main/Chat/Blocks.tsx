@@ -1,8 +1,8 @@
 import Dialog from '@/components/cores/Dialog';
 import Flex from '@/components/cores/Flex';
 import Image from '@/components/cores/Image';
-import Svg from '@/components/cores/Svg';
 import { useAppContext } from '@/contexts';
+import { CircleX, Link } from 'lucide-react';
 import type { Action, Block } from '@/types';
 import { twMerge } from 'tailwind-merge';
 
@@ -46,7 +46,7 @@ function ZoomableImage({ src, alt, className }: { src: string; alt?: string; cla
       <Dialog.Content>
         <Image src={src} alt={alt ?? ''} className="max-h-[80dvh] max-w-[80dvh]" noDistortion />
         <Dialog.Cancel className="fixed right-5 top-5 text-blue-400">
-          <Svg iconName="ic_cancel" />
+          <CircleX aria-hidden />
         </Dialog.Cancel>
       </Dialog.Content>
     </Dialog>
@@ -119,7 +119,7 @@ function LinkAction({ action }: { action: Extract<Action, { kind: 'link' }> }) {
       className="rounded-full p-1 px-3 border-[2px] text-gray-500 border-blue-500 transition-all hover:bg-gray-100 shrink-0 shadow-md"
     >
       <Flex className="gap-1 font-bold">
-        <Svg iconName="ic_link" svgProps={{ width: '20px', height: '20px', strokeWidth: '2px' }} />
+        <Link size={20} strokeWidth={2} aria-hidden />
         <p>{action.label}</p>
       </Flex>
     </a>
