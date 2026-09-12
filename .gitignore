@@ -31,3 +31,16 @@ dist-ssr
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# build outputs
+dist-lex
+dist-lambda
+dist-lambda.zip
+
+# ---------------------------------------------------------------------------
+# 챗봇 답변 콘텐츠 (Source of Truth = private S3)
+# 이 레포는 public이므로 답변 본문을 커밋하지 않는다. content/README.md 참고.
+# ---------------------------------------------------------------------------
+content/*.json
+.lex-export*/
+.local-tools/

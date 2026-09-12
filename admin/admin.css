@@ -1,0 +1,7 @@
+/* 어드민 전용 보정. 챗봇 스타일(index.css)을 그대로 재사용한다. */
+body {
+  background: #f6f7f9;
+}
+.admin-scroll {
+  scrollbar-width: thin;
+}

@@ -2,62 +2,63 @@ import Flex from '@/components/cores/Flex';
 import Footer from '@/components/customs/Footer';
 import Header from '@/components/customs/Header';
 import Main from '@/components/customs/Main';
-import { useOptimistic, useState } from 'react';
+import { useState } from 'react';
 import { useChatMutation } from './apis';
-import { TypeAddChat, TypeChat, TypeChatSource, TypeResponseChat } from '@/types';
-import { INITIAL_CHAT } from './consts';
+import type { Locale, TypeAddChat, TypeChat, TypeChatSource } from '@/types';
+import { getInitialChat } from './consts';
 import { AppContext } from './contexts';
 import './index.css';
 import {
+  createMyChatFromError,
   createMyChatFromResponse,
-  createMyChatLoadingMsg,
-  createMyChayChatFromError,
+  createMyChatLoading,
   createReqChatFromMessage,
   waitAtLeast,
 } from './utils';
 
+const detectLocale = (): Locale => (navigator.language?.startsWith('ko') ? 'ko' : 'en');
+
 function App() {
   const { mutateAsync: sendUserChat } = useChatMutation();
 
-  const [chats, setChats] = useState<TypeChat<TypeChatSource>[]>([INITIAL_CHAT]);
-  const [optiChats, addOptiChats] = useOptimistic(chats, (prev, newChat) =>
-    prev.concat(newChat as TypeChat<TypeChatSource>)
-  );
+  const [locale, setLocale] = useState<Locale>(detectLocale);
+  const [chats, setChats] = useState<TypeChat<TypeChatSource>[]>(() => [getInitialChat(detectLocale())]);
+  const [pending, setPending] = useState(false);
 
-  const addChat: TypeAddChat = (chat) => {
-    setChats((prevChats) => [...prevChats, chat]);
-  };
+  const addChat: TypeAddChat = (chat) => setChats((prev) => [...prev, chat]);
+
+  const [clickedBtns, setClickedBtns] = useState<string[]>([]);
+  const addClickedBtn = (value: string) => setClickedBtns((prev) => [...prev, value]);
 
   const onSubmit = async (formData: FormData) => {
-    const btnMsg = formData.get('btnMsg') as string;
-    if (clickedBtns.includes(btnMsg)) return;
+    const btnMsg = formData.get('btnMsg') as string | null;
+    if (btnMsg && clickedBtns.includes(btnMsg)) return;
 
-    const inputMsg = formData.get('inputMsg') as string;
-    if (inputMsg) addOptiChats(createReqChatFromMessage(inputMsg));
-    addOptiChats(createMyChatLoadingMsg());
+    const inputMsg = (formData.get('inputMsg') as string | null)?.trim();
+    const text = btnMsg || inputMsg;
+    if (!text) return;
 
-    const msg = btnMsg || inputMsg;
+    if (inputMsg) addChat(createReqChatFromMessage(inputMsg));
+    setPending(true);
 
     try {
-      const myChatResponse = await waitAtLeast(1500, sendUserChat(msg)) as TypeResponseChat; // TODO: make it Generic
-      if(myChatResponse.errorMessage) throw Error(myChatResponse.errorMessage);
-      if (inputMsg) addChat(createReqChatFromMessage(inputMsg));
-      addChat(createMyChatFromResponse(myChatResponse));
+      const response = await waitAtLeast(1500, sendUserChat({ text, locale }));
+      addChat(createMyChatFromResponse(response));
     } catch (error) {
-      if (inputMsg) addChat(createReqChatFromMessage(inputMsg));
-      addChat(createMyChayChatFromError(error));
+      addChat(createMyChatFromError(error, locale));
+    } finally {
+      setPending(false);
     }
   };
 
-  const [clickedBtns, setClickedBtns] = useState<string[]>([]);
-  const addClickedBtn = (btnValue: string) => setClickedBtns((prevBtnValues) => [...prevBtnValues, btnValue]);
+  const visibleChats = pending ? [...chats, createMyChatLoading(locale)] : chats;
 
   return (
-    <AppContext.Provider value={{ clickedBtns, addClickedBtn, addChat }}>
+    <AppContext.Provider value={{ clickedBtns, addClickedBtn, addChat, locale, setLocale }}>
       <Flex as="form" action={onSubmit} variants="verticalCenter" className="bg-white w-screen h-dvh relative">
-        <button /> {/* for preventing implicit submit */}
+        <button className="hidden" /> {/* implicit submit 방지 */}
         <Header />
-        <Main chats={optiChats} />
+        <Main chats={visibleChats} />
         <Footer />
       </Flex>
     </AppContext.Provider>

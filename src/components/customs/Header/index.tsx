@@ -1,12 +1,14 @@
 import Flex from '@/components/cores/Flex';
-import Robot from '/img_robot.gif';
+const Robot = '/img_robot.gif';
 import Dialog from '@/components/cores/Dialog';
 import Svg from '@/components/cores/Svg';
 import LabeldText from './LabldText';
+import LocaleToggle from './LocaleToggle';
 
 export default function Header() {
   return (
     <Flex className="w-full justify-center p-2 h-[64px] fixed top-0 shadow-md z-10 bg-white">
+      <LocaleToggle />
       <Dialog>
         <Dialog.Trigger render={<img src={Robot} className="w-[90px] -mb-2 cursor-pointer" />} />
         <Dialog.Content>
