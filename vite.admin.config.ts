@@ -52,6 +52,25 @@ function adminApi(): Plugin {
           if (url === '/api/content' && req.method === 'PUT') {
             const body = await readBody(req);
             const parsed = JSON.parse(body);
+
+            /*
+             * 파일과 스키마 버전이 다르면 덮어쓰지 않는다.
+             * 브라우저에 낡은 어드민이 열려 있는 채로 파일만 새 스키마로 받아온 경우,
+             * 그대로 저장하면 어드민이 모르는 항목이 통째로 사라진다.
+             * 클라이언트에서도 막지만(admin/lib/schema.ts), 파일을 실제로 쓰는 쪽에서 한 번 더 본다.
+             */
+            if (fs.existsSync(CONTENT_PATH)) {
+              const onDisk = JSON.parse(fs.readFileSync(CONTENT_PATH, 'utf8'));
+              if (onDisk.schemaVersion !== parsed.schemaVersion) {
+                return json(409, {
+                  error:
+                    `스키마 버전이 달라서 저장하지 않았습니다. ` +
+                    `파일은 ${onDisk.schemaVersion}, 저장하려는 값은 ${parsed.schemaVersion}입니다. ` +
+                    `어드민을 새로고침해서 파일을 다시 불러와주세요.`,
+                });
+              }
+            }
+
             parsed.updatedAt = new Date().toISOString();
             fs.writeFileSync(CONTENT_PATH, `${JSON.stringify(parsed, null, 2)}\n`, 'utf8');
             return json(200, { ok: true, updatedAt: parsed.updatedAt });

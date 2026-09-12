@@ -92,6 +92,18 @@ contentEditable 기반 에디터를 쓰면 브라우저가 만든 태그가 섞�
 | `gallery` | `images[].src`, `images[].alt` | 가로 스크롤 이미지들 (1장이면 `image`와 동일) |
 | `actions` | `items[]` — `ask`(발화 전송) / `link`(외부 링크) | 둥근 버튼 묶음 |
 
+## 스키마 버전
+
+`ContentFile.schemaVersion`이 이 어드민이 아는 값(`1`)과 다르면 **열리지 않습니다.**
+그대로 편집하면 어드민이 모르는 항목이 저장할 때 통째로 사라지기 때문입니다.
+S3가 Source of Truth라 조용히 지워지면 알아채기 어렵습니다.
+
+저장하는 쪽(`vite.admin.config.ts`)에서도 파일의 버전과 대조해서 다르면 409로 거부합니다.
+브라우저에 낡은 어드민이 열려 있는 채로 파일만 새로 받아온 경우를 막습니다.
+
+스키마를 올릴 때는 `admin/lib/schema.ts`의 `SUPPORTED_SCHEMA_VERSION`과
+`src/types/content.ts`를 함께 바꾸세요.
+
 ## 검증
 
 편집하는 동안 계속 돌고, **오류가 하나라도 있으면 발행 메뉴가 잠깁니다.**
@@ -149,6 +161,7 @@ yarn test        # lambda + 어드민 (82개)
 | `__tests__/entries.test.ts` | 정렬·복제·패치, uid가 JSON에 안 나오는지 |
 | `__tests__/store.test.ts` | 되돌리기 이력, 타이핑 묶음, dirty |
 | `__tests__/html.test.ts` | 허용 태그 / 짝 안 맞는 태그 |
+| `__tests__/schema.test.ts` | 다룰 수 없는 스키마 버전 거부 |
 
 `node --test`가 타입 스트리핑으로 `.ts`를 그대로 돌리므로 테스트 러너를 따로 두지
 않았습니다. 대신 **테스트가 닿는 모듈은 상대 import에 `.ts`를 붙입니다.** Node의 ESM
@@ -167,6 +180,7 @@ admin/
     entries.ts         ContentFile 변환기 (추가·삭제·정렬·복제)
     uid.ts             블록의 렌더 전용 id (심볼이라 저장 파일에 안 남는다)
     html.ts            텍스트 블록 태그 검사
+    schema.ts          다룰 수 있는 스키마 버전인지
     useDragList.ts     손잡이 드래그로 목록 정렬
     useSplit.ts        패널 폭 조절
   __tests__/           검증·변환·되돌리기 테스트 (node --test)
