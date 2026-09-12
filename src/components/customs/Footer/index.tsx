@@ -4,9 +4,16 @@ import { useEffect, useRef, useState } from 'react';
 import SendButton from './SendButton';
 import HomeButton from './HomeButton';
 import { useFormStatus } from 'react-dom';
+import { useAppContext } from '@/contexts';
+
+const PLACEHOLDER = {
+  ko: '궁금한점을 입력해주세요.',
+  en: 'Ask me anything.',
+};
 
 export default function Footer() {
   const { pending } = useFormStatus();
+  const { locale } = useAppContext();
 
   const [text, setText] = useState<string | undefined>('');
   const clearText = () => setText('');
@@ -28,7 +35,7 @@ export default function Footer() {
     <Flex className="fixed bottom-0 bg-white w-full h-[60px] pl-4 pr-2 py-2 gap-2">
       <HomeButton />
       <Input
-        placeholder="궁금한점을 입력해주세요."
+        placeholder={PLACEHOLDER[locale]}
         autoFocus
         disabled={pending}
         ref={inputRef}

@@ -1,7 +1,7 @@
 /**
  * 이 파일은 scripts/gen-ui-content.mjs가 생성합니다. 직접 수정하지 마세요.
  * 원본: content/current.json (S3: content/current.json)
- * 생성: 2026-09-12T09:23:45.096Z
+ * 생성: 2026-09-12T09:44:03.867Z
  */
 import type { Block, Locale } from '@/types/content';
 
@@ -53,7 +53,46 @@ export const UI_CONTENT: {
         ]
       }
     ],
-    "en": []
+    "en": [
+      {
+        "type": "text",
+        "html": "<p>Hi! I'm <mark>Heerim Hong, a Frontend Engineer</mark>.</p>"
+      },
+      {
+        "type": "text",
+        "html": "Tap one of the keywords below!"
+      },
+      {
+        "type": "actions",
+        "items": [
+          {
+            "kind": "ask",
+            "label": "About me",
+            "utterance": "self introduction"
+          },
+          {
+            "kind": "ask",
+            "label": "Resume",
+            "utterance": "resume"
+          },
+          {
+            "kind": "ask",
+            "label": "Portfolio",
+            "utterance": "portfolio"
+          }
+        ]
+      },
+      {
+        "type": "actions",
+        "items": [
+          {
+            "kind": "ask",
+            "label": "How did you build this?",
+            "utterance": "system architecture"
+          }
+        ]
+      }
+    ]
   },
   "home": {
     "ko": [
@@ -87,7 +126,37 @@ export const UI_CONTENT: {
         ]
       }
     ],
-    "en": []
+    "en": [
+      {
+        "type": "text",
+        "html": "<p>Here are the questions people ask most.</p>"
+      },
+      {
+        "type": "actions",
+        "items": [
+          {
+            "kind": "ask",
+            "label": "About me",
+            "utterance": "self introduction"
+          },
+          {
+            "kind": "ask",
+            "label": "Resume",
+            "utterance": "resume"
+          },
+          {
+            "kind": "ask",
+            "label": "Portfolio",
+            "utterance": "portfolio"
+          },
+          {
+            "kind": "ask",
+            "label": "Architecture",
+            "utterance": "system architecture"
+          }
+        ]
+      }
+    ]
   },
   "fallback": {
     "ko": [
@@ -106,6 +175,21 @@ export const UI_CONTENT: {
         ]
       }
     ],
-    "en": []
+    "en": [
+      {
+        "type": "text",
+        "html": "Anything else you would like to ask?"
+      },
+      {
+        "type": "actions",
+        "items": [
+          {
+            "kind": "ask",
+            "label": "See common questions",
+            "utterance": "faq"
+          }
+        ]
+      }
+    ]
   }
 } as const;
