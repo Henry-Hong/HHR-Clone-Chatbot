@@ -14,7 +14,10 @@
     "content:publish": "bash scripts/publish-content.sh",
     "content:rollback": "bash scripts/rollback-content.sh",
     "lex:build": "node scripts/content-to-lex.mjs",
-    "lex:publish": "node scripts/content-to-lex.mjs && bash scripts/publish-lex.sh"
+    "lex:publish": "node scripts/content-to-lex.mjs && bash scripts/publish-lex.sh",
+    "gen:ui": "node scripts/gen-ui-content.mjs",
+    "predev": "node scripts/gen-ui-content.mjs",
+    "prebuild": "node scripts/gen-ui-content.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.29.2",

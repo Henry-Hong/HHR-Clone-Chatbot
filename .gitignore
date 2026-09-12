@@ -43,3 +43,4 @@ dist-lambda.zip
 # ---------------------------------------------------------------------------
 content/*.json
 .lex-export*/
+src/generated

@@ -29,7 +29,7 @@ Dialog.Cancel = function Cancel({ children, className }: { children?: React.Reac
   );
 };
 
-Dialog.Trigger = function Trigger({ render }: { render: JSX.Element }) {
+Dialog.Trigger = function Trigger({ render }: { render: React.JSX.Element }) {
   const { open } = useModalContext();
   return React.cloneElement(render, { onClick: open });
 };

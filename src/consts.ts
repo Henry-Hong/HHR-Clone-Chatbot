@@ -1,56 +1,18 @@
-import { TypeChat } from '@/types';
+import { UI_CONTENT } from '@/generated/ui-content';
+import type { Block, Locale, TypeChat } from '@/types';
 
-export const INITIAL_CHAT: TypeChat<'me'> = {
+/**
+ * 화면용 문구는 전부 content(S3)에서 온다.
+ * 빌드 타임에 src/generated/ui-content.ts로 주입된다. (scripts/gen-ui-content.mjs)
+ */
+const toMyChat = (blocks: Block[]): TypeChat<'me'> => ({
   type: 'me',
-  chat: {
-    messages: [
-      {
-        contentType: 'PlainText',
-        content: '<p>안녕하세요! <mark>FrontEnd Engineer 홍희림</mark>입니다.</p>',
-      },
-      {
-        contentType: 'PlainText',
-        content: '아래의 키워드를 눌러주세요!',
-      },
-      {
-        contentType: 'ImageResponseCard',
-        imageResponseCard: {
-          buttons: [
-            { value: '자기소개', text: '자기소개' },
-            { value: '이력서', text: '이력서' },
-            { value: '포트폴리오', text: '포트폴리오' },
-          ],
-        },
-      },
-      {
-        contentType: 'ImageResponseCard',
-        imageResponseCard: {
-          buttons: [{ value: '시스템 구조', text: '어떻게 만들었어?' }],
-        },
-      },
-    ],
-  },
-};
+  chat: { locale: 'ko', intent: null, confidence: 1, fallback: false, blocks },
+});
 
-export const HOMEBUTTON_CHAT: TypeChat<'me'> = {
-  type: 'me',
-  chat: {
-    messages: [
-      {
-        contentType: 'PlainText',
-        content: '<p>자주 물어보는 질문들이에요.</p>',
-      },
-      {
-        contentType: 'ImageResponseCard',
-        imageResponseCard: {
-          buttons: [
-            { value: '자기소개', text: '자기소개' },
-            { value: '이력서', text: '이력서' },
-            { value: '포트폴리오', text: '포트폴리오' },
-            { value: '시스템 구조', text: '아키텍처' },
-          ],
-        },
-      },
-    ],
-  },
-};
+const pick = (localized: Record<Locale, Block[]>, locale: Locale): Block[] =>
+  localized[locale]?.length ? localized[locale] : localized.ko;
+
+export const getInitialChat = (locale: Locale = 'ko') => toMyChat(pick(UI_CONTENT.initial, locale));
+export const getHomeChat = (locale: Locale = 'ko') => toMyChat(pick(UI_CONTENT.home, locale));
+export const getFallbackBlocks = (locale: Locale = 'ko') => pick(UI_CONTENT.fallback, locale);
