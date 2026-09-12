@@ -36,6 +36,54 @@ FrontEnd + AWS Services
 <br >
 <br >
 
+# Content Pipeline
+
+답변 콘텐츠는 Lex가 아니라 **private S3**가 Source of Truth입니다.
+Lex는 `문자열 -> intentName` 분류기로만 씁니다.
+
+```
+  git (public repo)                    S3 (private, versioning on)
+  ├─ 프론트/Lambda 코드                 ├─ content/current.json   ← SoT
+  ├─ src/types/content.ts  (스키마)     └─ assets/*.png
+  └─ scripts/*             (변환)
+                                         ▲ IAM으로 Lambda만 읽기
+
+  [사용자] -> API GW -> Lambda ─┬─ Lex RecognizeText  (intentName만)
+                               └─ S3 content         (답변 Block[])
+                                  └─ CloudWatch Logs (구조화 대화 로그)
+```
+
+**답변만 고칠 때는 Lex를 건드리지 않습니다.** 발화(utterance)가 바뀔 때만 Lex에 발행합니다.
+
+| 작업 | 명령 | 반영 시간 |
+| :-- | :-- | :-- |
+| 답변 수정 | `yarn content:publish` | 즉시 (캐시 TTL 60초) |
+| 발화 추가/수정 | `yarn lex:publish` | 2~3분 (import + build) |
+| 롤백 | `yarn content:rollback` | 즉시 |
+| 최초 마이그레이션 | `yarn content:import <lex-export-dir>` | - |
+
+자세한 내용은 [`content/README.md`](./content/README.md) 참고.
+
+### 응답 포맷 (Block)
+
+```ts
+type Block =
+  | { type: 'text';    html: string; variations?: string[] }
+  | { type: 'image';   src: string; alt?: string; caption?: string }
+  | { type: 'gallery'; images: { src: string; alt?: string }[] }
+  | { type: 'actions'; items: Action[] };
+
+type Action =
+  | { kind: 'ask';  label: string; utterance: string }   // 재질문
+  | { kind: 'link'; label: string; url: string };        // 외부 링크
+```
+
+기존 Lex 메시지의 암묵적 컨벤션(`title: "-"` 플레이스홀더, `@라벨` 링크 prefix,
+`customPayload`의 비정형 JSON)을 전부 명시적 타입으로 대체했습니다.
+
+<br >
+<br >
+
 # Teams
 
 | <img src="https://avatars.githubusercontent.com/u/17701725?v=4,Henry-Hong,heerim,https://github.com/Henry-Hong" width="150" height="150"/> | <img src="https://avatars.githubusercontent.com/u/17701725?v=4,Henry-Hong,heerim,https://github.com/Henry-Hong" width="150" height="150"/> |
