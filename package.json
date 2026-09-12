@@ -8,7 +8,7 @@
     "build": "yarn typecheck && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "node --test lambda/*.test.mjs admin/__tests__/*.test.ts src/__tests__/*.test.ts",
+    "test": "node --test lambda/*.test.mjs admin/__tests__/*.test.ts src/__tests__/*.test.ts infra/cloudfront/*.test.mjs",
     "content:import": "node scripts/lex-to-content.mjs",
     "content:publish": "bash scripts/publish-content.sh",
     "content:rollback": "bash scripts/rollback-content.sh",
