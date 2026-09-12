@@ -201,7 +201,7 @@ export default function EntryListPanel({
                 </span>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="admin-inline-xs">
+                  <div className="admin-entry__line">
                     <span className="admin-entry__title" style={{ flex: 1 }}>
                       {entry.title || <em className={Classes.TEXT_MUTED}>(제목 없음)</em>}
                     </span>

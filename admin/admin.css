@@ -86,6 +86,21 @@ body {
 .admin-row--top {
   align-items: flex-start;
 }
+.admin-row--wrap {
+  flex-wrap: wrap;
+}
+
+/*
+ * 카드 안의 입력 칸. 자리가 모자라면 줄을 바꾸지, 읽을 수 없을 만큼 줄어들지 않는다.
+ * (1100px에서 버튼 라벨이 "자기소"까지만 보이던 문제)
+ */
+.admin-field {
+  flex: 1 1 150px;
+  min-width: 0;
+}
+.admin-field--short {
+  flex: 1 1 110px;
+}
 .admin-row--dragging {
   opacity: 0.4;
 }
@@ -137,12 +152,20 @@ body {
   min-width: 0;
 }
 
+/*
+ * 좌우 패널은 드래그로 정한 폭을 지키되, 창이 좁아지면 같이 줄어든다.
+ * 고정폭으로 두면 창을 줄였을 때 가운데 편집 영역만 쥐어짜여서
+ * 입력 칸이 읽을 수 없는 폭(46px까지 봤다)이 된다.
+ */
 .admin-pane--side {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 200px;
 }
 
 .admin-pane--center {
-  flex: 1;
+  flex: 1 1 auto;
+  /* 편집 영역이 이보다 좁아지면 카드 안의 입력 칸이 못 쓰게 된다 */
+  min-width: 380px;
   overflow-y: auto;
 }
 
@@ -163,11 +186,27 @@ body {
   background: #2d72d2;
 }
 
-/* 편집 영역은 너무 넓어지면 한 줄이 길어져 읽기 나쁘다 */
+/*
+ * Blueprint 탭 목록은 패딩이 0이라 패널 가장자리에 딱 붙는다.
+ * 그 아래 내용(검색창·목록·카드)은 모두 --sp-2만큼 들여쓰기 때문에
+ * 그대로 두면 탭만 8px 왼쪽으로 튀어나와 보인다.
+ */
+.admin-pane--side .bp6-tab-list {
+  padding: 0 var(--sp-2);
+}
+
+/*
+ * 편집 영역은 너무 넓어지면 한 줄이 길어져 읽기 나쁘다.
+ *
+ * width: 100%가 꼭 필요하다. 이 요소는 세로 flex 컨테이너의 item인데,
+ * `margin: 0 auto`가 stretch를 꺼버려서 폭이 내용에 맞춰진다.
+ * 그러면 항목을 고를 때마다 편집 영역이 좌우로 흔들린다. (실제로 13px씩 움직였다)
+ */
 .admin-editor {
-  padding: var(--sp-4);
+  width: 100%;
   max-width: 820px;
   margin: 0 auto;
+  padding: var(--sp-4);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -202,10 +241,21 @@ body {
   align-items: flex-start;
   gap: var(--sp-1);
   padding: var(--sp-2);
-  padding-left: var(--sp-1);
   border-bottom: 1px solid var(--admin-border);
   cursor: pointer;
   user-select: none;
+}
+
+/*
+ * 마우스로 누른 뒤에도 포커스 링이 남아 선택 표시와 겹쳐 보였다.
+ * 키보드로 이동했을 때만 보여준다. 안쪽으로 그려서 옆 행을 침범하지 않게 한다.
+ */
+.admin-entry:focus {
+  outline: none;
+}
+.admin-entry:focus-visible {
+  outline: 2px solid #2d72d2;
+  outline-offset: -2px;
 }
 .admin-entry:hover {
   background: rgba(143, 153, 168, 0.15);
@@ -233,6 +283,16 @@ body {
 .admin-entry__grip:active {
   cursor: grabbing;
 }
+/*
+ * 제목 줄에는 태그(높이 20px)가 있을 수도 없을 수도 있다.
+ * 높이를 고정하지 않으면 태그가 붙은 행만 2px 커져서 목록이 들쭉날쭉해 보인다.
+ */
+.admin-entry__line {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: 20px;
+}
 .admin-entry__title {
   font-size: 13px;
   line-height: 1.35;
@@ -240,6 +300,7 @@ body {
 }
 .admin-entry__meta {
   font-size: 11px;
+  /* 제목과 같은 덩어리로 읽히게 하는 광학적 간격. 레이아웃 간격(--sp-*)과는 다른 층이다. */
   margin-top: 2px;
 }
 .admin-entry--disabled .admin-entry__title {
@@ -330,4 +391,23 @@ textarea.admin-mono {
 /** InputGroup의 rightElement로 넣는 아이콘. 입력칸 높이에 맞춘다. */
 .admin-input-adornment {
   padding: var(--sp-2) var(--sp-2) 0 0;
+}
+
+/** 도움말 팝오버 안의 짧은 설명 */
+.admin-popover-note {
+  padding: var(--sp-3);
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.admin-popover-note p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.admin-popover-note code {
+  font-size: 11px;
+  line-height: 1.7;
+  word-break: break-all;
 }

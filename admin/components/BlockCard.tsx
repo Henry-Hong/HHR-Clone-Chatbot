@@ -1,7 +1,6 @@
 import {
   Button,
   ButtonGroup,
-  Classes,
   HTMLSelect,
   Icon,
   InputGroup,
@@ -113,12 +112,12 @@ export default function BlockCard({
 function VariationHeader({ count, onAdd }: { count: number; onAdd: () => void }) {
   return (
     <div className="admin-inline">
-      <Tag minimal icon="comparison">
-        변형 {count}
-      </Tag>
-      <span className={`${Classes.TEXT_MUTED} admin-hint`} style={{ flex: 1 }}>
-        같은 질문에 매번 다른 답이 나가게 합니다. 답할 때 원본 포함 하나를 무작위로 고릅니다.
-      </span>
+      {/* 설명을 항상 펼쳐 두면 블록마다 두세 줄씩 반복돼 편집 영역이 시끄러워진다 */}
+      <Tooltip compact content="같은 질문에 매번 다른 답이 나가게 합니다. 답할 때 원본 포함 하나를 무작위로 고릅니다.">
+        <Tag minimal icon="comparison" interactive>
+          변형 {count}
+        </Tag>
+      </Tooltip>
       <Button size="small" variant="minimal" icon="add" text="변형" onClick={onAdd} />
     </div>
   );
@@ -207,8 +206,8 @@ function ImageFields({
           intent={/^https?:\/\/\S+$/.test(value.src) ? 'none' : 'danger'}
           onValueChange={(src) => onChange({ ...value, src }, 'src')}
         />
-        <div className="admin-row">
-          <div style={{ flex: '1 1 0', minWidth: 0 }}>
+        <div className="admin-row admin-row--wrap">
+          <div className="admin-field">
             <InputGroup
               fill
               placeholder="alt (대체 텍스트)"
@@ -216,7 +215,7 @@ function ImageFields({
               onValueChange={(alt) => onChange({ ...value, alt: alt || undefined }, 'alt')}
             />
           </div>
-          <div style={{ flex: '1 1 0', minWidth: 0 }}>
+          <div className="admin-field">
             <InputGroup
               fill
               placeholder="캡션"
@@ -294,21 +293,23 @@ function GalleryBody({ block, onChange }: { block: GalleryBlock; onChange: Chang
             <Icon icon="drag-handle-vertical" size={12} />
           </span>
           <Thumb src={image.src} />
-          <div style={{ flex: '1 1 0', minWidth: 0 }}>
-            <InputGroup
-              fill
-              placeholder="이미지 URL (https://)"
-              value={image.src}
-              onValueChange={(src) => patch(index, { src }, 'src')}
-            />
-          </div>
-          <div style={{ flex: '0 1 130px', minWidth: 0 }}>
-            <InputGroup
-              fill
-              placeholder="alt"
-              value={image.alt ?? ''}
-              onValueChange={(alt) => patch(index, { alt: alt || undefined }, 'alt')}
-            />
+          <div className="admin-row admin-row--wrap" style={{ flex: '1 1 0', minWidth: 0 }}>
+            <div className="admin-field">
+              <InputGroup
+                fill
+                placeholder="이미지 URL (https://)"
+                value={image.src}
+                onValueChange={(src) => patch(index, { src }, 'src')}
+              />
+            </div>
+            <div className="admin-field admin-field--short">
+              <InputGroup
+                fill
+                placeholder="alt"
+                value={image.alt ?? ''}
+                onValueChange={(alt) => patch(index, { alt: alt || undefined }, 'alt')}
+              />
+            </div>
           </div>
           <Button
             variant="minimal"
@@ -378,34 +379,37 @@ function ActionsBody({
             <option value="link">링크</option>
           </HTMLSelect>
 
-          <div style={{ flex: '1 1 0', minWidth: 0 }}>
-            <InputGroup
-              fill
-              placeholder="버튼에 보일 라벨"
-              value={action.label}
-              intent={action.label.trim() ? 'none' : 'danger'}
-              onValueChange={(label) => patch(index, { ...action, label }, 'label')}
-            />
-          </div>
-
-          <div style={{ flex: '1 1 0', minWidth: 0 }}>
-            {action.kind === 'ask' ? (
-              <UtteranceInput
-                value={action.utterance}
-                ownerOf={ownerOf}
-                suggestions={suggestions}
-                onChange={(utterance) => patch(index, { ...action, utterance }, 'utterance')}
-              />
-            ) : (
+          {/* 좁은 폭에서는 라벨과 대상이 아래위로 나뉜다. 한 줄에 욱여넣으면 둘 다 읽을 수 없다. */}
+          <div className="admin-row admin-row--wrap" style={{ flex: '1 1 0', minWidth: 0 }}>
+            <div className="admin-field">
               <InputGroup
                 fill
-                leftIcon="link"
-                placeholder="https://"
-                value={action.url}
-                intent={/^https?:\/\/\S+$/.test(action.url) ? 'none' : 'danger'}
-                onValueChange={(url) => patch(index, { ...action, url }, 'url')}
+                placeholder="버튼에 보일 라벨"
+                value={action.label}
+                intent={action.label.trim() ? 'none' : 'danger'}
+                onValueChange={(label) => patch(index, { ...action, label }, 'label')}
               />
-            )}
+            </div>
+
+            <div className="admin-field">
+              {action.kind === 'ask' ? (
+                <UtteranceInput
+                  value={action.utterance}
+                  ownerOf={ownerOf}
+                  suggestions={suggestions}
+                  onChange={(utterance) => patch(index, { ...action, utterance }, 'utterance')}
+                />
+              ) : (
+                <InputGroup
+                  fill
+                  leftIcon="link"
+                  placeholder="https://"
+                  value={action.url}
+                  intent={/^https?:\/\/\S+$/.test(action.url) ? 'none' : 'danger'}
+                  onValueChange={(url) => patch(index, { ...action, url }, 'url')}
+                />
+              )}
+            </div>
           </div>
 
           <Button
