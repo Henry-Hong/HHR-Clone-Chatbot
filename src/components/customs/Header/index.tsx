@@ -11,7 +11,6 @@ import LinkedinLogo from '@/assets/svgs/ic_linkedin.svg?react';
 import NotionLogo from '@/assets/svgs/ic_notion.svg?react';
 import Dialog from '@/components/cores/Dialog';
 import LabeldText from './LabldText';
-import LocaleToggle from './LocaleToggle';
 
 const LINKS = [
   { label: 'GitHub', href: 'https://github.com/Henry-Hong', Logo: GithubLogo },
@@ -26,7 +25,6 @@ const LINKS = [
 export default function Header() {
   return (
     <Flex className="w-full justify-center p-2 h-[64px] fixed top-0 shadow-md z-10 bg-white">
-      <LocaleToggle />
       <Dialog>
         <Dialog.Trigger render={<img src={Robot} className="w-[90px] -mb-2 cursor-pointer" />} />
         <Dialog.Content>

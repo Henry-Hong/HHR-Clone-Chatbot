@@ -1,4 +1,5 @@
 import type { ContentFile } from '@/types';
+import { assertSupportedSchema } from './lib/schema.ts';
 
 export type UnansweredItem = {
   question: string;
@@ -14,7 +15,8 @@ const json = async <T>(res: Response): Promise<T> => {
 };
 
 export const api = {
-  getContent: () => fetch('/api/content').then((r) => json<ContentFile>(r)),
+  // 다룰 수 없는 스키마면 편집 화면에 들어가기 전에 막는다
+  getContent: () => fetch('/api/content').then((r) => json<ContentFile>(r)).then(assertSupportedSchema),
 
   saveContent: (content: ContentFile) =>
     fetch('/api/content', {

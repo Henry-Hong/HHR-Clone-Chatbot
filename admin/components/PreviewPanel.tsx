@@ -47,7 +47,6 @@ export default function PreviewPanel({
       addClickedBtn: (value: string) => setClicked((prev) => (prev.includes(value) ? prev : [...prev, value])),
       addChat: () => {},
       locale,
-      setLocale: () => {},
     }),
     [clickedBtns, locale]
   );
