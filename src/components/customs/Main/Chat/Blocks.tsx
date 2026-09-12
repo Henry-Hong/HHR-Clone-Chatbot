@@ -16,7 +16,8 @@ function TextBlock({ html, isLast }: { html: string; isLast: boolean }) {
       variants="verticalLeft"
       dangerouslySetInnerHTML={{ __html: html }}
       className={twMerge(
-        'text-left break-words border-[1.5px] rounded rounded-r-2xl rounded-bl-2xl bg-gray-100 py-2 px-3 box-content transition-all',
+        // chat-richtext: 본문 HTML의 목록·문단·링크 스타일. Tailwind preflight가 지운 것을 되살린다 (index.css)
+        'chat-richtext text-left break-words border-[1.5px] rounded rounded-r-2xl rounded-bl-2xl bg-gray-100 py-2 px-3 box-content transition-all',
         isLast ? 'border-gray-400/50' : 'border-transparent'
       )}
     />
@@ -52,10 +53,26 @@ function ZoomableImage({ src, alt, className }: { src: string; alt?: string; cla
   );
 }
 
+/**
+ * 아직 URL이 없는 이미지 자리.
+ * 빈 문자열을 `<img src>`로 넘기면 브라우저가 현재 페이지를 다시 받아온다.
+ * 어드민에서 이미지 블록을 막 추가한 직후가 정확히 이 상태다.
+ */
+function EmptyImage() {
+  return (
+    <Flex
+      variants="horizontalCenter"
+      className="w-full max-w-[320px] aspect-square rounded border-[1.5px] border-dashed border-gray-300 bg-gray-50 text-xs text-gray-400"
+    >
+      이미지 없음
+    </Flex>
+  );
+}
+
 function ImageBlock({ src, alt, caption }: { src: string; alt?: string; caption?: string }) {
   return (
     <Flex variants="verticalLeft" className="w-full gap-1">
-      <ZoomableImage src={src} alt={alt} className="w-full max-w-[320px]" />
+      {src ? <ZoomableImage src={src} alt={alt} className="w-full max-w-[320px]" /> : <EmptyImage />}
       {caption && <p className="text-xs text-gray-400">{caption}</p>}
     </Flex>
   );
@@ -71,14 +88,20 @@ function GalleryBlock({ images }: { images: { src: string; alt?: string }[] }) {
 
   return (
     <Flex className="w-full max-w-[320px] gap-2 overflow-x-auto pb-1 justify-start">
-      {images.map((image, index) => (
-        <ZoomableImage
-          key={`gallery-${index}-${image.src}`}
-          src={image.src}
-          alt={image.alt}
-          className="w-[140px] shrink-0"
-        />
-      ))}
+      {images.map((image, index) =>
+        image.src ? (
+          <ZoomableImage
+            key={`gallery-${index}-${image.src}`}
+            src={image.src}
+            alt={image.alt}
+            className="w-[140px] shrink-0"
+          />
+        ) : (
+          <div key={`gallery-${index}-empty`} className="w-[140px] shrink-0">
+            <EmptyImage />
+          </div>
+        )
+      )}
     </Flex>
   );
 }
