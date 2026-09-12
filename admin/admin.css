@@ -1,7 +1,226 @@
-/* 어드민 전용 보정. 챗봇 스타일(index.css)을 그대로 재사용한다. */
-body {
-  background: #f6f7f9;
+/* 어드민 전용 보정. 챗봇 스타일(index.css)과 Blueprint를 함께 쓴다. */
+
+html,
+body,
+#root {
+  height: 100%;
 }
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   레이아웃                                  */
+/* -------------------------------------------------------------------------- */
+
+.admin-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.admin-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.admin-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.admin-pane--center {
+  flex: 1;
+  overflow-y: auto;
+}
+
 .admin-scroll {
+  overflow-y: auto;
   scrollbar-width: thin;
+}
+
+/* 패널 사이 드래그 손잡이 */
+.admin-gutter {
+  flex: 0 0 5px;
+  cursor: col-resize;
+  background: var(--admin-gutter);
+  transition: background 120ms ease;
+}
+.admin-gutter:hover,
+.admin-gutter:active {
+  background: #2d72d2;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                     색                                      */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  --admin-gutter: #d3d8de;
+  --admin-surface: #ffffff;
+  --admin-sunken: #f6f7f9;
+  --admin-border: #d3d8de;
+}
+
+.bp6-dark {
+  --admin-gutter: #1c2127;
+  --admin-surface: #252a31;
+  --admin-sunken: #1c2127;
+  --admin-border: #383e47;
+}
+
+.admin-surface {
+  background: var(--admin-surface);
+}
+.admin-sunken {
+  background: var(--admin-sunken);
+}
+.admin-border-r {
+  border-right: 1px solid var(--admin-border);
+}
+.admin-border-l {
+  border-left: 1px solid var(--admin-border);
+}
+.admin-border-b {
+  border-bottom: 1px solid var(--admin-border);
+}
+.admin-border-t {
+  border-top: 1px solid var(--admin-border);
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   엔트리 목록                                */
+/* -------------------------------------------------------------------------- */
+
+.admin-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 7px 8px 7px 4px;
+  border-bottom: 1px solid var(--admin-border);
+  cursor: pointer;
+  user-select: none;
+}
+.admin-entry:hover {
+  background: rgba(143, 153, 168, 0.15);
+}
+.admin-entry--selected,
+.admin-entry--selected:hover {
+  background: rgba(45, 114, 210, 0.15);
+  box-shadow: inset 3px 0 0 #2d72d2;
+}
+.admin-entry--dragging {
+  opacity: 0.4;
+}
+.admin-entry--over {
+  box-shadow: inset 0 2px 0 #2d72d2;
+}
+.admin-entry__grip {
+  opacity: 0.25;
+  cursor: grab;
+  padding-top: 2px;
+  transition: opacity 120ms ease;
+}
+.admin-entry:hover .admin-entry__grip {
+  opacity: 0.8;
+}
+.admin-entry__grip:active {
+  cursor: grabbing;
+}
+.admin-entry__title {
+  font-size: 13px;
+  line-height: 1.35;
+  word-break: break-all;
+}
+.admin-entry__meta {
+  font-size: 11px;
+  margin-top: 2px;
+}
+.admin-entry--disabled .admin-entry__title {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   블록 카드                                  */
+/* -------------------------------------------------------------------------- */
+
+.admin-block--dragging {
+  opacity: 0.4;
+}
+.admin-block--over {
+  box-shadow: 0 -2px 0 #2d72d2;
+}
+.admin-block__grip {
+  cursor: grab;
+}
+.admin-block__grip:active {
+  cursor: grabbing;
+}
+
+/* 갤러리 이미지 · 버튼처럼 카드 안에서 순서를 바꾸는 줄 */
+.admin-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+.admin-row--dragging {
+  opacity: 0.4;
+}
+.admin-row--over {
+  box-shadow: 0 -2px 0 #2d72d2;
+}
+
+.admin-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 3px;
+  background: var(--admin-sunken);
+  flex: 0 0 auto;
+}
+
+/* 텍스트 블록 편집기는 HTML을 직접 만지므로 고정폭이 읽기 편하다 */
+.admin-mono textarea,
+textarea.admin-mono {
+  font-family: var(--bp6-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   미리보기                                   */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * 미리보기 안은 실제 챗봇 화면이다. 어드민이 다크 모드여도 챗봇은 밝은 화면이므로
+ * 항상 흰 배경으로 고정한다. 여기서만 챗봇 Tailwind 스타일이 산다.
+ */
+.admin-preview {
+  background: #ffffff;
+  color: #1c2127;
+  border-radius: 6px;
+}
+
+.admin-preview a {
+  text-decoration: none;
+}
+
+/*
+ * 챗봇 말풍선은 `box-content`라 부모 폭에 좌우 패딩이 더해져 좁은 미리보기 패널을 넘친다.
+ * 실제 화면에서는 바깥 여백이 넉넉해 티가 안 나지만 여기서는 잘린다.
+ * 미리보기 안에서만 border-box로 되돌린다.
+ */
+.admin-preview .box-content {
+  box-sizing: border-box;
+}
+
+.admin-preview img {
+  max-width: 100%;
 }

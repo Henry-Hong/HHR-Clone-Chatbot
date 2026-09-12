@@ -1,367 +1,458 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { Block, ContentFile, Entry, Locale } from '@/types';
-import { api } from './api';
-import BlockEditor from './BlockEditor';
-import { EMPTY_BLOCK } from './blockFactory';
-import Preview from './Preview';
-import { validate, type Issue } from './validate';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Classes,
+  NonIdealState,
+  OverlayToaster,
+  Spinner,
+  Tab,
+  Tabs,
+  type HotkeyConfig,
+  type Toaster,
+  useHotkeys,
+} from '@blueprintjs/core';
+import type { Block, Entry, Locale } from '@/types';
+import { api, type UnansweredItem } from './api';
+import type { PublishKind } from './components/AppNavbar';
+import AppNavbar from './components/AppNavbar';
+import EntryEditor from './components/EntryEditor';
+import EntryListPanel, { type EntryFilter } from './components/EntryListPanel';
+import IssuesPanel from './components/IssuesPanel';
+import PreviewPanel from './components/PreviewPanel';
+import UnansweredPanel from './components/UnansweredPanel';
+import { AddUtteranceDialog, DeleteEntryAlert, EntryOmnibar, LogDrawer, NewEntryDialog } from './components/dialogs';
+import {
+  addEntry,
+  blocksOf,
+  duplicateEntry,
+  emptyEntry,
+  patchEntry as patchEntryIn,
+  removeEntry,
+  reorderEntries,
+  setBlocks as setBlocksIn,
+  setUtterances as setUtterancesIn,
+  sorted,
+  utterancesOf,
+} from './lib/entries';
+import { useContentStore } from './lib/store';
+import { useLocalState } from './lib/useLocalState';
+import { useSplit } from './lib/useSplit';
+import { errorsOf, groupByEntry, validate } from './validate';
 
-const BTN = 'text-sm px-3 py-1.5 rounded-md border transition-colors disabled:opacity-40';
-const BTN_PRIMARY = `${BTN} bg-blue-500 text-white border-blue-500 hover:bg-blue-600`;
-const BTN_PLAIN = `${BTN} bg-white border-gray-200 hover:bg-gray-50`;
-
-type Tab = 'entries' | 'unanswered';
+const PUBLISH: Record<PublishKind, { name: string; run: () => Promise<{ log: string }> }> = {
+  content: { name: '콘텐츠 발행', run: api.publishContent },
+  lex: { name: 'Lex 발행', run: api.publishLex },
+  ui: { name: 'UI 문구 반영', run: api.genUi },
+};
 
 export default function App() {
-  const [content, setContent] = useState<ContentFile | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [locale, setLocale] = useState<Locale>('ko');
-  const [dirty, setDirty] = useState(false);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [log, setLog] = useState<string>('');
+  const store = useContentStore();
+  const { content, dirty } = store;
+
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useLocalState<string | null>('selected', null);
+  const [locale, setLocale] = useLocalState<Locale>('locale', 'ko');
+  const [dark, setDark] = useLocalState('dark', false);
+  const [leftTab, setLeftTab] = useState<'entries' | 'unanswered'>('entries');
+  const [rightTab, setRightTab] = useLocalState<'preview' | 'issues'>('rightTab', 'preview');
   const [query, setQuery] = useState('');
-  const [tab, setTab] = useState<Tab>('entries');
-  const [unanswered, setUnanswered] = useState<{ question: string; count: number }[] | null>(null);
+  const [filter, setFilter] = useState<EntryFilter>('all');
+
+  const [busy, setBusy] = useState<string | null>(null);
+  const [log, setLog] = useState('');
+  const [logOpen, setLogOpen] = useState(false);
+
+  const [omnibarOpen, setOmnibarOpen] = useState(false);
+  const [newEntryOpen, setNewEntryOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<Entry | null>(null);
+  const [pendingUtterance, setPendingUtterance] = useState<UnansweredItem | null>(null);
+
+  const [days, setDays] = useLocalState('unansweredDays', 7);
+  const [unanswered, setUnanswered] = useState<UnansweredItem[] | null>(null);
+  const [unansweredError, setUnansweredError] = useState<string | null>(null);
+  const [unansweredLoading, setUnansweredLoading] = useState(false);
+
+  const left = useSplit('left', 300, 220, 460);
+  const right = useSplit('right', 400, 300, 680);
+  const toaster = useRef<Toaster | null>(null);
+
+  /* ------------------------------- 부트스트랩 ------------------------------ */
 
   useEffect(() => {
-    api.getContent().then(setContent).catch((e) => setLog(`❌ ${e.message}`));
+    OverlayToaster.create({ position: 'top' }).then((instance) => {
+      toaster.current = instance;
+    });
   }, []);
 
-  const issues: Issue[] = useMemo(() => (content ? validate(content) : []), [content]);
-  const issuesById = useMemo(() => {
-    const map = new Map<string, Issue[]>();
-    for (const issue of issues) {
-      if (!issue.entryId) continue;
-      map.set(issue.entryId, [...(map.get(issue.entryId) ?? []), issue]);
-    }
-    return map;
-  }, [issues]);
+  useEffect(() => {
+    api.getContent().then(store.load).catch((error: Error) => setLoadError(error.message));
+  }, [store.load]);
 
-  const entries = content?.entries ?? [];
-  const selected = entries.find((e) => e.id === selectedId) ?? null;
+  useEffect(() => {
+    document.body.classList.toggle(Classes.DARK, dark);
+    document.body.classList.toggle('admin-sunken', true);
+  }, [dark]);
 
-  const filtered = entries.filter((entry) => {
-    if (!query) return true;
-    const haystack = [entry.id, entry.title, ...(entry.utterances.ko ?? []), ...(entry.utterances.en ?? [])]
-      .join(' ')
-      .toLowerCase();
-    return haystack.includes(query.toLowerCase());
-  });
+  // 저장하지 않은 편집을 실수로 날리지 않게 한다.
+  useEffect(() => {
+    if (!dirty) return undefined;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
 
-  /* ------------------------------ mutations ------------------------------ */
+  const notify = useCallback((message: string, intent: 'success' | 'danger' | 'primary', icon?: 'tick-circle') => {
+    toaster.current?.show({ message, intent, icon, timeout: intent === 'danger' ? 8000 : 3000 });
+  }, []);
 
-  const patchEntry = (id: string, patch: Partial<Entry>) => {
-    setContent((prev) =>
-      prev ? { ...prev, entries: prev.entries.map((e) => (e.id === id ? { ...e, ...patch } : e)) } : prev
-    );
-    setDirty(true);
-  };
+  /* -------------------------------- 파생 상태 ------------------------------- */
 
-  const setBlocks = (id: string, next: Block[]) => {
-    const entry = entries.find((e) => e.id === id);
-    if (!entry) return;
-    patchEntry(id, { blocks: { ...entry.blocks, [locale]: next } });
-  };
+  const entries = useMemo(() => (content ? sorted(content.entries) : []), [content]);
+  const issues = useMemo(() => (content ? validate(content) : []), [content]);
+  const issuesById = useMemo(() => groupByEntry(issues), [issues]);
+  const errors = useMemo(() => errorsOf(issues), [issues]);
+  const selected = entries.find((entry) => entry.id === selectedId) ?? null;
 
-  const setUtterances = (id: string, raw: string) => {
-    const entry = entries.find((e) => e.id === id);
-    if (!entry) return;
-    const list = raw.split('\n').map((line) => line.trim()).filter(Boolean);
-    patchEntry(id, { utterances: { ...entry.utterances, [locale]: list } });
-  };
+  /* --------------------------------- 편집 --------------------------------- */
 
-  /* -------------------------------- actions ------------------------------- */
+  const patchEntry = useCallback(
+    (id: string, patch: Partial<Entry>, coalesce?: string) =>
+      store.edit((current) => patchEntryIn(current, id, patch), coalesce && `${id}:${coalesce}`),
+    [store]
+  );
 
-  const withBusy = async (name: string, fn: () => Promise<unknown>) => {
-    setBusy(name);
-    setLog(`⏳ ${name}...`);
+  const setBlocks = useCallback(
+    (id: string, blocks: Block[], coalesce?: string) =>
+      store.edit((current) => setBlocksIn(current, id, locale, blocks), coalesce && `${id}:${locale}:${coalesce}`),
+    [store, locale]
+  );
+
+  const setUtterances = useCallback(
+    (id: string, values: string[]) => store.edit((current) => setUtterancesIn(current, id, locale, values)),
+    [store, locale]
+  );
+
+  const createEntry = useCallback(
+    (id: string, title: string) => {
+      store.edit((current) => addEntry(current, emptyEntry(id, title, 'intent', current.entries.length)));
+      setSelectedId(id);
+      setNewEntryOpen(false);
+      notify(`${title} 항목을 만들었어요.`, 'success', 'tick-circle');
+    },
+    [store, setSelectedId, notify]
+  );
+
+  const duplicate = useCallback(
+    (id: string) => {
+      store.edit((current) => {
+        const result = duplicateEntry(current, id);
+        if (!result) return null;
+        // 복제본은 발화가 비어 있어 바로 활성화하면 Lex가 절대 고를 수 없다. 사용자가 채우도록 선택만 옮긴다.
+        queueMicrotask(() => setSelectedId(result.id));
+        return result.content;
+      });
+    },
+    [store, setSelectedId]
+  );
+
+  const confirmDelete = useCallback(
+    (id: string) => {
+      store.edit((current) => removeEntry(current, id));
+      setPendingDelete(null);
+      if (selectedId === id) setSelectedId(null);
+      notify('삭제했어요. ⌘Z로 되돌릴 수 있습니다.', 'primary');
+    },
+    [store, selectedId, setSelectedId, notify]
+  );
+
+  const addUtteranceToEntry = useCallback(
+    (entryId: string, utterance: string, target: Locale) => {
+      store.edit((current) => {
+        const entry = current.entries.find((item) => item.id === entryId);
+        if (!entry) return null;
+        const existing = utterancesOf(entry, target);
+        if (existing.includes(utterance)) return null;
+        return setUtterancesIn(current, entryId, target, [...existing, utterance]);
+      });
+      setPendingUtterance(null);
+      setSelectedId(entryId);
+      setLeftTab('entries');
+      notify(`"${utterance}"를 추가했어요. Lex 발행을 해야 반영됩니다.`, 'success', 'tick-circle');
+    },
+    [store, setSelectedId, notify]
+  );
+
+  /* -------------------------------- 서버 작업 ------------------------------- */
+
+  const save = useCallback(async () => {
+    if (!content || !dirty) return;
+    setBusy('저장');
     try {
-      const result = (await fn()) as { log?: string; updatedAt?: string };
-      setLog(`✅ ${name} 완료\n${result?.log ?? ''}`.trim());
-      return true;
+      const { updatedAt } = await api.saveContent(content);
+      store.markSaved(updatedAt);
+      notify('저장했어요.', 'success', 'tick-circle');
     } catch (error) {
-      setLog(`❌ ${name} 실패\n${error instanceof Error ? error.message : String(error)}`);
-      return false;
+      notify(`저장 실패: ${error instanceof Error ? error.message : String(error)}`, 'danger');
     } finally {
       setBusy(null);
     }
-  };
+  }, [content, dirty, store, notify]);
 
-  const save = async () => {
-    if (!content) return;
-    const ok = await withBusy('저장', () => api.saveContent(content));
-    if (ok) setDirty(false);
-  };
+  const publish = useCallback(
+    async (kind: PublishKind) => {
+      const { name, run } = PUBLISH[kind];
+      setBusy(name);
+      setLog(`⏳ ${name} 실행 중...`);
+      try {
+        const result = await run();
+        setLog(`✅ ${name} 완료\n\n${result.log ?? ''}`.trim());
+        notify(`${name} 완료`, 'success', 'tick-circle');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        setLog(`❌ ${name} 실패\n\n${message}`);
+        setLogOpen(true);
+        notify(`${name} 실패 — 로그를 확인하세요.`, 'danger');
+      } finally {
+        setBusy(null);
+      }
+    },
+    [notify]
+  );
 
-  const blocks = selected ? selected.blocks[locale] ?? [] : [];
+  const loadUnanswered = useCallback(
+    async (nextDays: number) => {
+      setUnansweredLoading(true);
+      setUnansweredError(null);
+      try {
+        const { items } = await api.unanswered(nextDays);
+        setUnanswered(items);
+      } catch (error) {
+        setUnanswered(null);
+        setUnansweredError(error instanceof Error ? error.message : String(error));
+      } finally {
+        setUnansweredLoading(false);
+      }
+    },
+    []
+  );
 
-  /* --------------------------------- render -------------------------------- */
+  useEffect(() => {
+    if (leftTab === 'unanswered') void loadUnanswered(days);
+  }, [leftTab, days, loadUnanswered]);
+
+  /* -------------------------------- 단축키 --------------------------------- */
+
+  const hotkeys = useMemo<HotkeyConfig[]>(
+    () => [
+      { combo: 'mod+s', global: true, label: '저장', preventDefault: true, onKeyDown: () => void save() },
+      { combo: 'mod+z', global: true, label: '되돌리기', preventDefault: true, onKeyDown: store.undo },
+      { combo: 'mod+shift+z', global: true, label: '다시 실행', preventDefault: true, onKeyDown: store.redo },
+      {
+        combo: 'mod+k',
+        global: true,
+        label: '항목 찾기',
+        preventDefault: true,
+        onKeyDown: () => setOmnibarOpen(true),
+      },
+      {
+        combo: 'mod+shift+l',
+        global: true,
+        label: '언어 전환',
+        preventDefault: true,
+        onKeyDown: () => setLocale(locale === 'ko' ? 'en' : 'ko'),
+      },
+    ],
+    [save, store.undo, store.redo, locale, setLocale]
+  );
+
+  const { handleKeyDown, handleKeyUp } = useHotkeys(hotkeys);
+
+  /* --------------------------------- 렌더 ---------------------------------- */
+
+  if (loadError) {
+    return (
+      <div className="admin-sunken" style={{ height: '100%', display: 'grid', placeItems: 'center', padding: 24 }}>
+        <NonIdealState
+          icon="error"
+          title="콘텐츠를 불러오지 못했어요"
+          description={
+            <>
+              <p>{loadError}</p>
+              <p className={Classes.TEXT_MUTED} style={{ fontSize: 12 }}>
+                S3에서 먼저 받아오세요:
+                <br />
+                <code>aws s3 cp s3://$CONTENT_BUCKET/content/current.json content/current.json</code>
+                <br />
+                로컬에서 구경만 해볼 거라면: <code>node scripts/seed-content.mjs</code>
+              </p>
+            </>
+          }
+          action={<button className={Classes.BUTTON} onClick={() => window.location.reload()}>다시 시도</button>}
+        />
+      </div>
+    );
+  }
 
   if (!content) {
     return (
-      <div className="h-dvh flex items-center justify-center text-gray-400">
-        {log || 'content 불러오는 중...'}
+      <div className="admin-sunken" style={{ height: '100%', display: 'grid', placeItems: 'center' }}>
+        <Spinner />
       </div>
     );
   }
 
   return (
-    <div className="h-dvh flex flex-col">
-      {/* ------------------------------- header ------------------------------ */}
-      <header className="shrink-0 bg-white border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
-        <h1 className="font-bold text-gray-700">HHR Chatbot Admin</h1>
-        <span className="text-xs text-gray-400">
-          엔트리 {entries.length} · 수정 {new Date(content.updatedAt).toLocaleString('ko-KR')}
-        </span>
+    <div className="admin-shell admin-sunken" onKeyDown={handleKeyDown} onKeyUp={handleKeyUp} tabIndex={-1}>
+      <AppNavbar
+        content={content}
+        dirty={dirty}
+        busy={busy}
+        errorCount={errors.length}
+        warnCount={issues.length - errors.length}
+        canUndo={store.canUndo}
+        canRedo={store.canRedo}
+        dark={dark}
+        hasLog={!!log}
+        onUndo={store.undo}
+        onRedo={store.redo}
+        onSave={() => void save()}
+        onPublish={(kind) => void publish(kind)}
+        onToggleDark={() => setDark(!dark)}
+        onOpenSearch={() => setOmnibarOpen(true)}
+        onOpenLog={() => setLogOpen(true)}
+        onShowErrors={() => setRightTab('issues')}
+      />
 
-        <div className="ml-auto flex items-center gap-2">
-          {dirty && <span className="text-xs text-orange-500 font-bold">저장 안 됨</span>}
-          {issues.some((i) => i.level === 'error') && (
-            <span className="text-xs text-red-500 font-bold">
-              오류 {issues.filter((i) => i.level === 'error').length}
-            </span>
-          )}
-          <button className={BTN_PRIMARY} disabled={!dirty || !!busy} onClick={save}>
-            저장
-          </button>
-          <button
-            className={BTN_PLAIN}
-            disabled={dirty || !!busy}
-            title="답변만 바뀐 경우 — Lex는 건드리지 않음"
-            onClick={() => withBusy('콘텐츠 발행', api.publishContent)}
+      <div className="admin-body">
+        {/* ------------------------------ 좌 ------------------------------- */}
+        <aside className="admin-pane admin-surface admin-border-r" style={{ width: left.width, flex: '0 0 auto' }}>
+          <Tabs
+            id="left"
+            selectedTabId={leftTab}
+            onChange={(id) => setLeftTab(id as typeof leftTab)}
+            className="admin-border-b"
+            renderActiveTabPanelOnly
           >
-            발행 (즉시)
-          </button>
-          <button
-            className={BTN_PLAIN}
-            disabled={dirty || !!busy}
-            title="발화가 바뀐 경우에만 — import + build로 2~3분 소요"
-            onClick={() => withBusy('Lex 발행', api.publishLex)}
-          >
-            Lex 발행
-          </button>
-          <button
-            className={BTN_PLAIN}
-            disabled={dirty || !!busy}
-            title="최초 인사/홈/fallback 문구를 프론트 번들에 반영"
-            onClick={() => withBusy('UI 문구 반영', api.genUi)}
-          >
-            UI 반영
-          </button>
-        </div>
-      </header>
+            <Tab id="entries" title="엔트리" icon="layers" tagContent={entries.length} />
+            <Tab
+              id="unanswered"
+              title="미응답"
+              icon="inbox"
+              tagContent={unanswered?.length || undefined}
+            />
+          </Tabs>
 
-      <div className="flex-1 flex min-h-0">
-        {/* ------------------------------ 좌: 목록 ----------------------------- */}
-        <aside className="w-[290px] shrink-0 border-r border-gray-200 bg-white flex flex-col">
-          <div className="p-2 border-b border-gray-200 flex gap-1">
-            <button
-              className={`flex-1 text-xs py-1.5 rounded ${tab === 'entries' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'}`}
-              onClick={() => setTab('entries')}
-            >
-              엔트리
-            </button>
-            <button
-              className={`flex-1 text-xs py-1.5 rounded ${tab === 'unanswered' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'}`}
-              onClick={() => {
-                setTab('unanswered');
-                if (!unanswered) api.unanswered(7).then((r) => setUnanswered(r.items)).catch(() => setUnanswered([]));
-              }}
-            >
-              미응답 질문
-            </button>
-          </div>
-
-          {tab === 'entries' && (
-            <>
-              <div className="p-2 border-b border-gray-200">
-                <input
-                  className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-blue-400"
-                  placeholder="검색 (제목/발화)"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-              </div>
-              <div className="flex-1 overflow-y-auto admin-scroll">
-                {filtered.map((entry) => {
-                  const entryIssues = issuesById.get(entry.id) ?? [];
-                  const hasError = entryIssues.some((i) => i.level === 'error');
-                  return (
-                    <button
-                      key={entry.id}
-                      onClick={() => setSelectedId(entry.id)}
-                      className={`w-full text-left px-3 py-2 border-b border-gray-100 transition-colors ${
-                        selectedId === entry.id ? 'bg-blue-50' : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-sm truncate ${entry.enabled ? 'text-gray-700' : 'text-gray-300 line-through'}`}>
-                          {entry.title}
-                        </span>
-                        {entry.kind === 'system' && (
-                          <span className="text-[10px] px-1 rounded bg-gray-100 text-gray-500 shrink-0">화면</span>
-                        )}
-                        {entry.showInFaq && <span className="text-[10px] text-amber-500 shrink-0">★</span>}
-                        {hasError && <span className="text-[10px] text-red-500 shrink-0">●</span>}
-                      </div>
-                      <div className="text-[11px] text-gray-400 mt-0.5">
-                        ko {entry.blocks.ko?.length ?? 0} · en {entry.blocks.en?.length ?? 0}
-                        {entry.kind === 'intent' && ` · 발화 ${entry.utterances.ko?.length ?? 0}`}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
-
-          {tab === 'unanswered' && (
-            <div className="flex-1 overflow-y-auto admin-scroll p-2">
-              <p className="text-[11px] text-gray-400 mb-2 px-1">
-                최근 7일간 답을 못 한 질문이에요. 자주 나오는 건 인텐트로 만들면 좋아요.
-              </p>
-              {unanswered === null && <p className="text-xs text-gray-400 px-1">불러오는 중...</p>}
-              {unanswered?.length === 0 && <p className="text-xs text-gray-400 px-1">없어요 🎉</p>}
-              {unanswered?.map((item) => (
-                <div key={item.question} className="px-2 py-1.5 border-b border-gray-100">
-                  <div className="text-sm text-gray-700 break-all">{item.question}</div>
-                  <div className="text-[11px] text-gray-400">{item.count}회</div>
-                </div>
-              ))}
-            </div>
+          {leftTab === 'entries' ? (
+            <EntryListPanel
+              entries={entries}
+              selectedId={selectedId}
+              issuesById={issuesById}
+              query={query}
+              filter={filter}
+              onQuery={setQuery}
+              onFilter={setFilter}
+              onSelect={setSelectedId}
+              onCreate={() => setNewEntryOpen(true)}
+              onDuplicate={duplicate}
+              onDelete={setPendingDelete}
+              onToggleEnabled={(entry) => patchEntry(entry.id, { enabled: !entry.enabled })}
+              onMove={(from, to) => store.edit((current) => reorderEntries(current, from, to))}
+            />
+          ) : (
+            <UnansweredPanel
+              items={unanswered}
+              error={unansweredError}
+              loading={unansweredLoading}
+              days={days}
+              onDays={setDays}
+              onRefresh={() => void loadUnanswered(days)}
+              onAdd={setPendingUtterance}
+            />
           )}
         </aside>
 
-        {/* ------------------------------ 중: 편집 ----------------------------- */}
-        <main className="flex-1 min-w-0 overflow-y-auto admin-scroll p-4">
-          {!selected && <p className="text-sm text-gray-400 text-center mt-16">왼쪽에서 항목을 선택하세요.</p>}
+        <div className="admin-gutter" onMouseDown={left.start('right')} role="separator" aria-orientation="vertical" />
 
-          {selected && (
-            <div className="flex flex-col gap-3 max-w-[720px]">
-              <div className="flex items-center gap-2 flex-wrap">
-                <input
-                  className="border border-gray-200 rounded px-2 py-1.5 text-sm font-bold flex-1 min-w-[180px]"
-                  value={selected.title}
-                  onChange={(e) => patchEntry(selected.id, { title: e.target.value })}
-                />
-                <code className="text-[11px] text-gray-400">{selected.id}</code>
-
-                <label className="text-xs flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    checked={selected.enabled}
-                    onChange={(e) => patchEntry(selected.id, { enabled: e.target.checked })}
-                  />
-                  활성
-                </label>
-                {selected.kind === 'intent' && (
-                  <label className="text-xs flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={selected.showInFaq}
-                      onChange={(e) => patchEntry(selected.id, { showInFaq: e.target.checked })}
-                    />
-                    FAQ 노출
-                  </label>
-                )}
-
-                <div className="flex rounded-md overflow-hidden border border-gray-200 ml-auto">
-                  {(['ko', 'en'] as Locale[]).map((l) => (
-                    <button
-                      key={l}
-                      className={`text-xs px-3 py-1.5 ${locale === l ? 'bg-blue-500 text-white' : 'bg-white hover:bg-gray-50'}`}
-                      onClick={() => setLocale(l)}
-                    >
-                      {l.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {(issuesById.get(selected.id) ?? []).map((issue, i) => (
-                <div
-                  key={i}
-                  className={`text-xs rounded px-2 py-1.5 ${
-                    issue.level === 'error' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'
-                  }`}
-                >
-                  {issue.message}
-                </div>
-              ))}
-
-              {selected.kind === 'intent' && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[11px] font-semibold text-gray-400 uppercase">
-                    발화 ({locale}) — 한 줄에 하나. 바꾸면 &quot;Lex 발행&quot; 필요
-                  </span>
-                  <textarea
-                    className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm font-mono"
-                    rows={4}
-                    value={(selected.utterances[locale] ?? []).join('\n')}
-                    onChange={(e) => setUtterances(selected.id, e.target.value)}
-                  />
-                </div>
-              )}
-
-              <div className="flex flex-col gap-2">
-                {blocks.map((block, index) => (
-                  <BlockEditor
-                    key={`${selected.id}-${locale}-${index}`}
-                    block={block}
-                    index={index}
-                    total={blocks.length}
-                    onChange={(next) => setBlocks(selected.id, blocks.map((b, i) => (i === index ? next : b)))}
-                    onRemove={() => setBlocks(selected.id, blocks.filter((_, i) => i !== index))}
-                    onMove={(delta) => {
-                      const next = [...blocks];
-                      const target = index + delta;
-                      [next[index], next[target]] = [next[target], next[index]];
-                      setBlocks(selected.id, next);
-                    }}
-                  />
-                ))}
-
-                <div className="flex gap-1.5 flex-wrap">
-                  {(Object.keys(EMPTY_BLOCK) as Block['type'][]).map((type) => (
-                    <button
-                      key={type}
-                      className={BTN_PLAIN}
-                      onClick={() => setBlocks(selected.id, [...blocks, EMPTY_BLOCK[type]()])}
-                    >
-                      + {type}
-                    </button>
-                  ))}
-                  {locale === 'en' && blocks.length === 0 && (
-                    <button
-                      className={BTN_PLAIN}
-                      title="한국어 블록 구조를 복사해서 번역 시작점으로 쓴다"
-                      onClick={() =>
-                        setBlocks(selected.id, JSON.parse(JSON.stringify(selected.blocks.ko ?? [])) as Block[])
-                      }
-                    >
-                      ⧉ 한국어에서 복사
-                    </button>
-                  )}
-                </div>
-              </div>
+        {/* ------------------------------ 중 ------------------------------- */}
+        <main className="admin-pane admin-pane--center">
+          {selected ? (
+            <EntryEditor
+              content={content}
+              entry={selected}
+              locale={locale}
+              issues={issuesById.get(selected.id) ?? []}
+              onLocale={setLocale}
+              onPatch={(patch, coalesce) => patchEntry(selected.id, patch, coalesce)}
+              onBlocks={(blocks, coalesce) => setBlocks(selected.id, blocks, coalesce)}
+              onUtterances={(values) => setUtterances(selected.id, values)}
+            />
+          ) : (
+            <div style={{ marginTop: 80 }}>
+              <NonIdealState
+              icon="select"
+              title="편집할 항목을 고르세요"
+              description="왼쪽 목록에서 항목을 선택하거나 ⌘K로 찾을 수 있어요."
+              layout="vertical"
+              />
             </div>
           )}
         </main>
 
-        {/* ------------------------------ 우: 미리보기 -------------------------- */}
-        <section className="w-[380px] shrink-0 border-l border-gray-200 bg-white flex flex-col">
-          {selected ? (
-            <Preview blocks={blocks} locale={locale} title={selected.title} />
+        <div className="admin-gutter" onMouseDown={right.start('left')} role="separator" aria-orientation="vertical" />
+
+        {/* ------------------------------ 우 ------------------------------- */}
+        <section className="admin-pane admin-surface admin-border-l" style={{ width: right.width, flex: '0 0 auto' }}>
+          <Tabs
+            id="right"
+            selectedTabId={rightTab}
+            onChange={(id) => setRightTab(id as typeof rightTab)}
+            className="admin-border-b"
+          >
+            <Tab id="preview" title="미리보기" icon="eye-open" />
+            <Tab id="issues" title="검증" icon={errors.length ? 'error' : 'tick-circle'} tagContent={issues.length || undefined} />
+          </Tabs>
+
+          {rightTab === 'preview' ? (
+            selected ? (
+              <PreviewPanel
+                blocks={blocksOf(selected, locale)}
+                locale={locale}
+                fallbackBlocks={locale === content.defaultLocale ? [] : blocksOf(selected, content.defaultLocale)}
+              />
+            ) : (
+              <div style={{ marginTop: 40 }}>
+                <NonIdealState icon="eye-open" title="미리보기" layout="vertical" />
+              </div>
+            )
           ) : (
-            <div className="flex-1 flex items-center justify-center text-sm text-gray-300">미리보기</div>
-          )}
-          {log && (
-            <pre className="shrink-0 max-h-[180px] overflow-y-auto admin-scroll text-[11px] bg-gray-900 text-gray-100 p-3 whitespace-pre-wrap">
-              {log}
-            </pre>
+            <IssuesPanel issues={issues} entries={entries} onSelect={setSelectedId} />
           )}
         </section>
       </div>
+
+      {/* ------------------------------ 오버레이 ------------------------------ */}
+      <EntryOmnibar
+        isOpen={omnibarOpen}
+        entries={entries}
+        onClose={() => setOmnibarOpen(false)}
+        onSelect={setSelectedId}
+      />
+      <NewEntryDialog
+        isOpen={newEntryOpen}
+        takenIds={entries.map((entry) => entry.id)}
+        onClose={() => setNewEntryOpen(false)}
+        onCreate={createEntry}
+      />
+      <AddUtteranceDialog
+        question={pendingUtterance?.question ?? null}
+        locale={(pendingUtterance?.locale as Locale) ?? locale}
+        entries={entries}
+        onClose={() => setPendingUtterance(null)}
+        onAdd={(entryId, utterance) =>
+          addUtteranceToEntry(entryId, utterance, (pendingUtterance?.locale as Locale) ?? locale)
+        }
+      />
+      <DeleteEntryAlert entry={pendingDelete} onCancel={() => setPendingDelete(null)} onConfirm={confirmDelete} />
+      <LogDrawer log={log} isOpen={logOpen} onClose={() => setLogOpen(false)} />
     </div>
   );
 }

@@ -1,8 +1,15 @@
 import type { ContentFile } from '@/types';
 
+export type UnansweredItem = {
+  question: string;
+  count: number;
+  last: number;
+  locale: string;
+};
+
 const json = async <T>(res: Response): Promise<T> => {
-  const data = await res.json();
-  if (!res.ok) throw new Error((data as { error?: string }).error ?? `HTTP ${res.status}`);
+  const data = (await res.json().catch(() => ({}))) as { error?: string };
+  if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
   return data as T;
 };
 
@@ -21,7 +28,5 @@ export const api = {
   genUi: () => fetch('/api/gen-ui', { method: 'POST' }).then((r) => json<{ log: string }>(r)),
 
   unanswered: (days = 7) =>
-    fetch(`/api/unanswered?days=${days}`).then((r) =>
-      json<{ items: { question: string; count: number; last: number; locale: string }[] }>(r)
-    ),
+    fetch(`/api/unanswered?days=${days}`).then((r) => json<{ items: UnansweredItem[] }>(r)),
 };
