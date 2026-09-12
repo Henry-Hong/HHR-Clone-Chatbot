@@ -54,14 +54,14 @@ function App() {
   const visibleChats = pending ? [...chats, createMyChatLoading(locale)] : chats;
 
   return (
-    <AppContext.Provider value={{ clickedBtns, addClickedBtn, addChat, locale, setLocale }}>
+    <AppContext value={{ clickedBtns, addClickedBtn, addChat, locale, setLocale }}>
       <Flex as="form" action={onSubmit} variants="verticalCenter" className="bg-white w-screen h-dvh relative">
         <button className="hidden" /> {/* implicit submit 방지 */}
         <Header />
         <Main chats={visibleChats} />
         <Footer />
       </Flex>
-    </AppContext.Provider>
+    </AppContext>
   );
 }
 

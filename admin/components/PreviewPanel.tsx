@@ -53,7 +53,7 @@ export default function PreviewPanel({
   );
 
   return (
-    <AppContext.Provider value={context}>
+    <AppContext value={context}>
       <div className="admin-scroll admin-pad admin-stack-sm" style={{ flex: 1 }}>
         {isFallback && (
           <Callout compact icon="translate" intent="warning">
@@ -112,6 +112,6 @@ export default function PreviewPanel({
           )}
         </div>
       </div>
-    </AppContext.Provider>
+    </AppContext>
   );
 }
