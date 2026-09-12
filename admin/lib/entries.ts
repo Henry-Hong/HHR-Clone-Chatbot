@@ -1,6 +1,6 @@
 import type { Block, ContentFile, Entry, Locale } from '@/types';
 import type { EntryKind } from '@/types/content';
-import { clone } from './uid';
+import { clone } from './uid.ts';
 
 export const LOCALES: Locale[] = ['ko', 'en'];
 

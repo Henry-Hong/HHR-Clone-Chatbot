@@ -141,17 +141,22 @@ export default function App() {
     [store, setSelectedId, notify]
   );
 
+  /*
+   * 복제는 결과(새 id)를 밖으로 꺼내야 하므로 리듀서 안에서 계산하지 않는다.
+   * 리듀서는 순수해야 하고 StrictMode에서 두 번 호출된다.
+   * 타이핑처럼 연속으로 들어오는 편집과 달리 복제는 한 번의 클릭이라
+   * 렌더 시점의 content로 계산해도 낡은 값을 잡을 일이 없다.
+   */
   const duplicate = useCallback(
     (id: string) => {
-      store.edit((current) => {
-        const result = duplicateEntry(current, id);
-        if (!result) return null;
-        // 복제본은 발화가 비어 있어 바로 활성화하면 Lex가 절대 고를 수 없다. 사용자가 채우도록 선택만 옮긴다.
-        queueMicrotask(() => setSelectedId(result.id));
-        return result.content;
-      });
+      if (!content) return;
+      const result = duplicateEntry(content, id);
+      if (!result) return;
+      store.edit(() => result.content);
+      // 복제본은 발화가 비어 있어 바로 활성화하면 Lex가 절대 고를 수 없다. 사용자가 채우도록 선택만 옮긴다.
+      setSelectedId(result.id);
     },
-    [store, setSelectedId]
+    [content, store, setSelectedId]
   );
 
   const confirmDelete = useCallback(

@@ -1,6 +1,10 @@
+/*
+ * 상대 import에 .ts를 붙이는 이유: 이 모듈은 번들러 없이 `node --test`로도 돈다.
+ * Node의 ESM 해석기는 확장자를 생략할 수 없다. (tsconfig의 allowImportingTsExtensions)
+ */
 import type { ContentFile, Entry, Locale } from '@/types';
-import { INTENT_ID, LOCALES, SYSTEM_IDS, blocksOf, utterancesOf } from './lib/entries';
-import { disallowedTags, hasUnbalancedTags, plainText } from './lib/html';
+import { INTENT_ID, LOCALES, SYSTEM_IDS, blocksOf, utterancesOf } from './lib/entries.ts';
+import { disallowedTags, hasUnbalancedTags, plainText } from './lib/html.ts';
 
 export type IssueLevel = 'error' | 'warn';
 

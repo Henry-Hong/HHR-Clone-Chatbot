@@ -39,6 +39,19 @@ if (!fs.existsSync(IN)) {
   process.exit(1);
 }
 
+/*
+ * 시드(더미) 콘텐츠로 생성물을 덮어쓰지 않는다.
+ * OUT은 git에 커밋되고 그대로 프로덕션 첫 화면이 되므로,
+ * 시드 상태로 빌드한 결과가 섞여 들어가면 인사말이 "(시드 데이터)"가 된 채 배포된다.
+ */
+if (fs.existsSync(path.join(path.dirname(IN), '.seeded'))) {
+  if (fs.existsSync(OUT)) {
+    console.log(`ℹ️  ${IN}은 시드 데이터입니다 → ${OUT}을 그대로 둡니다.`);
+    process.exit(0);
+  }
+  console.warn(`⚠️  시드 데이터로 ${OUT}을 만듭니다. 이 파일은 커밋 대상이니 그대로 커밋하지 마세요.`);
+}
+
 const content = JSON.parse(fs.readFileSync(IN, 'utf8'));
 
 const pick = (id) => {

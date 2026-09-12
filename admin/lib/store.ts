@@ -18,7 +18,7 @@ const LIMIT = 60;
 /** 이 시간 안에 같은 필드를 계속 고치면 되돌리기 한 단계로 묶는다. */
 const COALESCE_MS = 700;
 
-type State = {
+export type State = {
   present: ContentFile | null;
   past: ContentFile[];
   future: ContentFile[];
@@ -31,7 +31,7 @@ type State = {
 
 export type Recipe = (content: ContentFile) => ContentFile | null;
 
-type Action =
+export type Action =
   | { type: 'load'; content: ContentFile }
   | { type: 'edit'; recipe: Recipe; coalesce?: string }
   | { type: 'undo' }
@@ -40,7 +40,10 @@ type Action =
 
 const initial: State = { present: null, past: [], future: [], dirty: false, lastKey: null, lastAt: 0 };
 
-const reducer = (state: State, action: Action): State => {
+/** 테스트에서 리듀서만 따로 돌려볼 수 있게 내보낸다. React 없이 순수하게 검증한다. */
+export const initialState = initial;
+
+export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case 'load':
       return { ...initial, present: action.content };

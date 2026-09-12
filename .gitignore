@@ -33,6 +33,7 @@ dist-ssr
 !.yarn/versions
 
 # build outputs
+*.tsbuildinfo
 dist-lex
 dist-lambda
 dist-lambda.zip
@@ -42,5 +43,6 @@ dist-lambda.zip
 # 이 레포는 public이므로 답변 본문을 커밋하지 않는다. content/README.md 참고.
 # ---------------------------------------------------------------------------
 content/*.json
+content/.seeded
 .lex-export*/
 .local-tools/

@@ -16,20 +16,19 @@ export default function Footer() {
   const { locale } = useAppContext();
 
   const [text, setText] = useState<string | undefined>('');
-  const clearText = () => setText('');
-
   const inputRef = useRef<HTMLInputElement>(null);
-  const autoFocusOnInput = () => {
-    inputRef.current?.focus();
-  };
 
-  const afterSubmit = () => {
-    clearText();
-    autoFocusOnInput();
-  };
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => afterSubmit, [pending]);
+  /*
+   * 제출이 시작되면 입력칸을 비우고(보낸 말은 이미 대화에 올라가 있다),
+   * 끝나면 다시 포커스해서 바로 다음 질문을 칠 수 있게 한다.
+   *
+   * 예전에는 effect의 cleanup 자리에 이 동작을 넣어뒀는데, 결과적으로는 맞게
+   * 돌았지만 "언제 실행되는지"가 코드에 드러나지 않았다.
+   */
+  useEffect(() => {
+    if (pending) setText('');
+    else inputRef.current?.focus();
+  }, [pending]);
 
   return (
     <Flex className="fixed bottom-0 bg-white w-full h-[60px] pl-4 pr-2 py-2 gap-2">

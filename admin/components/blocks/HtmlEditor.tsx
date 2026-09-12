@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useRef } from 'react';
-import { Button, ButtonGroup, Callout, Classes, Divider, TextArea, Tooltip } from '@blueprintjs/core';
+import { Button, ButtonGroup, Callout, Classes, Divider, Popover, TextArea, Tooltip } from '@blueprintjs/core';
 import type { IconName } from '@blueprintjs/icons';
 import { ALLOWED_TAGS, disallowedTags, hasUnbalancedTags } from '../../lib/html';
 
@@ -151,6 +151,23 @@ export default function HtmlEditor({ value, onChange, coalesceKey, rows }: Props
             ))}
           </span>
         ))}
+
+        {/* 허용 태그 안내는 블록마다 두 줄씩 차지하던 것을 여기로 접어 넣었다 */}
+        <Popover
+          placement="bottom-end"
+          content={
+            <div className="admin-popover-note">
+              <strong>답변 본문에서 쓸 수 있는 태그</strong>
+              <p className={Classes.TEXT_MUTED}>
+                목록에 없는 태그는 저장은 되지만 검증에서 오류로 잡힙니다. 말풍선 안에서 실제로 보이는 것만
+                넣어뒀습니다.
+              </p>
+              <code>{ALLOWED_TAGS.map((tag) => `<${tag}>`).join(' ')}</code>
+            </div>
+          }
+        >
+          <Button icon="help" aria-label="허용 태그" style={{ marginLeft: 'auto' }} />
+        </Popover>
       </ButtonGroup>
 
       <TextArea
@@ -172,10 +189,6 @@ export default function HtmlEditor({ value, onChange, coalesceKey, rows }: Props
           {unbalanced && <div>닫히지 않은 태그가 있어요.</div>}
         </Callout>
       )}
-
-      <div className={Classes.TEXT_MUTED} style={{ fontSize: 11 }}>
-        허용 태그 {ALLOWED_TAGS.map((tag) => `<${tag}>`).join(' ')}
-      </div>
     </div>
   );
 }
