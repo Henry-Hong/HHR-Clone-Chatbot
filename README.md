@@ -51,8 +51,13 @@ FrontEnd + AWS Services
 그래서 `/en`으로 들어온 사람이 한국어로 물어도 한국어로 답한다.
 경로를 나눠 둔 이유는 공유·북마크와 검색 노출(`hreflang`)이다.
 
-`/en`은 CloudFront 설정 없이, 배포할 때 같은 번들을 `en` 키로 한 번 더 올려서 서빙한다.
+`/en`은 배포할 때 같은 번들을 `en` 키로 한 번 더 올려서 서빙한다.
 (`.github/workflows/main.yml`) 링크는 `/en`으로 건다 — `/en/`은 S3에 그런 키가 없어 404다.
+
+루트로 온 방문자를 브라우저 언어에 맞춰 `/en`으로 보내는 CloudFront Function이 있다.
+(`infra/cloudfront/`) 리다이렉트를 함수 안에서 만들기 때문에 `Accept-Language`가
+캐시 키에 들어가지 않고, `/en`과 헤더 없는 요청은 통과시켜서 두 버전이 모두 색인된다.
+레포에서 자동 배포되지 않으므로 한 번 수동으로 올려야 한다 — `infra/cloudfront/README.md`.
 
 ### 2. Amazon Lex
 
