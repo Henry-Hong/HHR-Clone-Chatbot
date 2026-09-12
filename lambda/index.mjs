@@ -103,6 +103,65 @@ export const blocksFor = (content, entryId, locale) => {
   return blocks.map(resolveBlock);
 };
 
+/* -------------------------------------------------------------------------- */
+/*                       legacy 호환 (프론트 교체 전까지)                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * 구 프론트가 기대하는 Lex 메시지 모양으로 되돌린다.
+ * 새 프론트가 배포되면 이 함수와 legacy 필드를 지우면 된다.
+ * (상호 배포 순서에 상관없이 동작하도록 하기 위한 과도기 코드)
+ */
+export const toLegacyMessages = (blocks) => {
+  const messages = [];
+
+  for (const block of blocks) {
+    if (block.type === 'text') {
+      messages.push({ contentType: 'PlainText', content: block.html });
+      continue;
+    }
+    if (block.type === 'image') {
+      messages.push({
+        contentType: 'ImageResponseCard',
+        imageResponseCard: {
+          title: block.alt ?? '-',
+          subtitle: block.caption ?? '-',
+          imageUrl: block.src,
+        },
+      });
+      continue;
+    }
+    if (block.type === 'gallery') {
+      for (const image of block.images) {
+        messages.push({
+          contentType: 'ImageResponseCard',
+          imageResponseCard: { title: image.alt ?? '-', subtitle: '-', imageUrl: image.src },
+        });
+      }
+      continue;
+    }
+    if (block.type === 'actions') {
+      messages.push({
+        contentType: 'ImageResponseCard',
+        imageResponseCard: {
+          title: '-',
+          subtitle: '-',
+          // 구 프론트는 '@' prefix를 링크로 해석한다
+          buttons: block.items.map((item) =>
+            item.kind === 'link'
+              ? { text: `@${item.label}`, value: item.url }
+              : { text: item.label, value: item.utterance }
+          ),
+        },
+      });
+    }
+  }
+
+  return messages;
+};
+
+/* -------------------------------------------------------------------------- */
+
 export const parseEvent = (event) => {
   const payload =
     typeof event?.body === 'string' ? JSON.parse(event.body || '{}') : event?.body ?? event ?? {};
@@ -138,7 +197,7 @@ export const handler = async (event) => {
 
   if (!text) {
     log({ intent: null, hit: false, err: 'empty_text' });
-    return { locale, intent: null, confidence: 0, fallback: true, blocks: [] };
+    return { locale, intent: null, confidence: 0, fallback: true, blocks: [], messages: [], metadatas: { confidence: 0 } };
   }
 
   try {
@@ -161,18 +220,30 @@ export const handler = async (event) => {
     const blocks = intent === FALLBACK_INTENT ? null : blocksFor(content, intent, locale);
 
     if (!blocks) {
+      const fallbackBlocks = blocksFor(content, '__fallback', locale) ?? [];
       log({ intent, conf: confidence, hit: false });
       return {
         locale,
         intent,
         confidence,
         fallback: true,
-        blocks: blocksFor(content, '__fallback', locale) ?? [],
+        blocks: fallbackBlocks,
+        // legacy: 구 프론트는 messages가 빈 배열이면 자체 fallback UI를 그린다
+        messages: [],
+        metadatas: { confidence },
       };
     }
 
     log({ intent, conf: confidence, hit: true, blocks: blocks.length });
-    return { locale, intent, confidence, fallback: false, blocks };
+    return {
+      locale,
+      intent,
+      confidence,
+      fallback: false,
+      blocks,
+      messages: toLegacyMessages(blocks),
+      metadatas: { confidence },
+    };
   } catch (error) {
     console.error(JSON.stringify({ evt: 'chat_error', q: text, locale, err: error.message }));
     log({ intent: null, hit: false, err: error.name });
@@ -183,6 +254,8 @@ export const handler = async (event) => {
       fallback: true,
       error: 'internal_error',
       blocks: [],
+      messages: [],
+      metadatas: { confidence: 0 },
     };
   }
 };

@@ -154,3 +154,45 @@ test('ask 버튼의 utterance가 실제로 매칭 가능한 발화인지', { ski
 
   assert.deepEqual(dangling, [], `어떤 인텐트에도 매칭되지 않는 버튼:\n  ${dangling.join('\n  ')}`);
 });
+
+/* ----------------------------- legacy 호환 ------------------------------- */
+
+test('toLegacyMessages: 구 프론트 포맷으로 되돌린다', async () => {
+  const { toLegacyMessages } = await import('./index.mjs');
+  const messages = toLegacyMessages([
+    { type: 'text', html: '<p>hi</p>' },
+    { type: 'image', src: 'a.png', alt: 'A', caption: 'C' },
+    { type: 'gallery', images: [{ src: 'g1.png', alt: 'G1' }, { src: 'g2.png' }] },
+    {
+      type: 'actions',
+      items: [
+        { kind: 'ask', label: '자기소개', utterance: '자기소개' },
+        { kind: 'link', label: '이력서', url: 'https://example.com' },
+      ],
+    },
+  ]);
+
+  assert.equal(messages.length, 5);
+  assert.deepEqual(messages[0], { contentType: 'PlainText', content: '<p>hi</p>' });
+  assert.equal(messages[1].imageResponseCard.imageUrl, 'a.png');
+  assert.equal(messages[1].imageResponseCard.title, 'A');
+  assert.equal(messages[2].imageResponseCard.imageUrl, 'g1.png');
+  assert.equal(messages[3].imageResponseCard.imageUrl, 'g2.png');
+  // '@' prefix 컨벤션 복원
+  assert.deepEqual(messages[4].imageResponseCard.buttons, [
+    { text: '자기소개', value: '자기소개' },
+    { text: '@이력서', value: 'https://example.com' },
+  ]);
+});
+
+test('toLegacyMessages: 실제 content 전체를 변환해도 깨지지 않는다', { skip: !fs.existsSync(CONTENT_PATH) }, async () => {
+  const { toLegacyMessages } = await import('./index.mjs');
+  const content = JSON.parse(fs.readFileSync(CONTENT_PATH, 'utf8'));
+  for (const entry of content.entries) {
+    const messages = toLegacyMessages(entry.blocks.ko ?? []);
+    for (const message of messages) {
+      assert.ok(['PlainText', 'ImageResponseCard'].includes(message.contentType));
+      if (message.contentType === 'PlainText') assert.equal(typeof message.content, 'string');
+    }
+  }
+});
