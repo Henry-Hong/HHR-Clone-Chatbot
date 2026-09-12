@@ -8,7 +8,12 @@
  * 최초 인사 / 홈 버튼 / fallback 문구는 API 응답이 아니라 첫 페인트에 바로
  * 보여야 하므로 빌드 타임에 박아 넣는다. 그래도 원본은 여전히 content 하나뿐이다.
  *
- * content 파일이 없으면 S3에서 받아오라고 안내하고 실패한다.
+ * 이 생성물은 git에 커밋한다.
+ * 인사말·버튼 라벨은 사이트를 열면 즉시 보이는 것이라 감출 가치가 없고,
+ * 커밋해두면 CI가 S3 접근 권한 없이도 빌드할 수 있다.
+ * (이력서·포트폴리오 같은 실제 답변은 여전히 S3에만 있다.)
+ *
+ * content 파일이 없고 생성물만 있으면(= CI) 그대로 둔다.
  */
 
 import fs from 'node:fs';
@@ -20,8 +25,13 @@ const OUT = 'src/generated/ui-content.ts';
 const SYSTEM_IDS = ['__initial', '__home', '__fallback'];
 
 if (!fs.existsSync(IN)) {
+  if (fs.existsSync(OUT)) {
+    console.log(`ℹ️  ${IN} 없음 → 이미 생성된 ${OUT}을 그대로 사용합니다.`);
+    console.log(`   최신화하려면: aws s3 cp s3://$CONTENT_BUCKET/content/current.json ${IN}`);
+    process.exit(0);
+  }
   console.error(`
-❌ ${IN} 이(가) 없습니다.
+❌ ${IN} 도 ${OUT} 도 없습니다.
 
    S3에서 먼저 받아오세요:
      aws s3 cp s3://$CONTENT_BUCKET/content/current.json ${IN}
@@ -42,8 +52,7 @@ const pick = (id) => {
 
 const ui = Object.fromEntries(SYSTEM_IDS.map((id) => [id.replace(/^__/, ''), pick(id)]));
 
-const banner = `/* eslint-disable */
-/**
+const banner = `/**
  * 이 파일은 scripts/gen-ui-content.mjs가 생성합니다. 직접 수정하지 마세요.
  * 원본: content/current.json (S3: content/current.json)
  * 생성: ${new Date().toISOString()}

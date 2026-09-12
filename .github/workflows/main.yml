@@ -2,42 +2,74 @@ name: HHR Chatbot deployment
 
 on:
   push:
-    branches:
-      - prod
+    branches: [prod]
+  pull_request:
+    branches: [main, prod]
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        node-version: [20.x]
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
-
+  verify:
+    name: 검증
+    runs-on: ubuntu-latest
     steps:
-      - name: 1. Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: 2. Run Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          registry-url: 'https://registry.npmjs.org/'
+          node-version: 24
+          cache: yarn
 
-      - name: 3. Install dependencies
-        run: yarn install
+      - name: 의존성 설치
+        run: yarn install --frozen-lockfile
 
-      - name: 4. Build react app
+      - name: 타입 체크
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Lambda 테스트
+        run: |
+          npm --prefix lambda install --no-package-lock
+          yarn test
+
+  deploy:
+    name: 배포
+    needs: verify
+    if: github.ref == 'refs/heads/prod' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: yarn
+
+      - name: 의존성 설치
+        run: yarn install --frozen-lockfile
+
+      # 화면용 문구(인사말/버튼)는 src/generated/ui-content.ts에 커밋돼 있어
+      # S3 접근 없이도 빌드된다. 실제 답변은 런타임에 Lambda가 S3에서 읽는다.
+      - name: 빌드
         run: yarn build
 
-      - name: 5. Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: AWS 자격 증명
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: 6. Deploy to S3
-        run: aws s3 sync dist s3://${{secrets.AWS_BUCKET_NAME}} --delete
+      - name: S3 업로드
+        run: |
+          # 해시 파일은 길게, index.html은 캐시 금지
+          aws s3 sync dist s3://${{ secrets.AWS_BUCKET_NAME }} --delete \
+            --exclude index.html --cache-control "public,max-age=31536000,immutable"
+          aws s3 cp dist/index.html s3://${{ secrets.AWS_BUCKET_NAME }}/index.html \
+            --cache-control "no-cache"
 
-      - name: 7. Invalidate CloudFront cache
-        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+      - name: CloudFront 무효화
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/index.html"
