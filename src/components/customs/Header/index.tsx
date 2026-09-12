@@ -1,9 +1,27 @@
 import Flex from '@/components/cores/Flex';
 const Robot = '/img_robot.gif';
+
+/*
+ * 브랜드 로고는 lucide에 없다 (lucide는 브랜드 아이콘을 제공하지 않는다).
+ * 그래서 이 셋만 기존 SVG를 그대로 쓰되, 정적 import로 번들에 함께 들어간다.
+ * UI 아이콘은 전부 lucide-react를 쓴다.
+ */
+import GithubLogo from '@/assets/svgs/ic_github.svg?react';
+import LinkedinLogo from '@/assets/svgs/ic_linkedin.svg?react';
+import NotionLogo from '@/assets/svgs/ic_notion.svg?react';
 import Dialog from '@/components/cores/Dialog';
-import Svg from '@/components/cores/Svg';
 import LabeldText from './LabldText';
 import LocaleToggle from './LocaleToggle';
+
+const LINKS = [
+  { label: 'GitHub', href: 'https://github.com/Henry-Hong', Logo: GithubLogo },
+  {
+    label: 'Notion',
+    href: 'https://kfo5a5rloe.execute-api.ap-northeast-2.amazonaws.com/THIS_IS_MY_STAGE/redirect?type=blog&from=chatbot',
+    Logo: NotionLogo,
+  },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/heerim/', Logo: LinkedinLogo },
+];
 
 export default function Header() {
   return (
@@ -17,35 +35,18 @@ export default function Header() {
             <LabeldText label="Author" text="Henry Hong" />
             <LabeldText label="Email" text="devheerim@gmail.com" />
             <Flex variants="horizontalCenter" className="w-full gap-2 my-2">
-              <Svg
-                iconName="ic_github"
-                svgProps={{
-                  className: 'w-10 h-10 cursor-pointer hover:opacity-80',
-                  onClick: () => window.open('https://github.com/Henry-Hong', '_blank'),
-                }}
-              />
-              <Svg
-                iconName="ic_notion"
-                svgProps={{
-                  className: 'w-10 h-10 cursor-pointer hover:opacity-80',
-                  onClick: () =>
-                    window.open(
-                      'https://kfo5a5rloe.execute-api.ap-northeast-2.amazonaws.com/THIS_IS_MY_STAGE/redirect?type=blog&from=chatbot',
-                      '_blank'
-                    ),
-                }}
-              />
-              <Svg
-                iconName="ic_linkedin"
-                svgProps={{
-                  className: 'w-10 h-10 cursor-pointer hover:opacity-80',
-                  onClick: () =>
-                    window.open(
-                      'https://www.linkedin.com/in/heerim/',
-                      '_blank'
-                    ),
-                }}
-              />
+              {LINKS.map(({ label, href, Logo }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={label}
+                  className="rounded hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400"
+                >
+                  <Logo className="w-10 h-10" aria-hidden />
+                </a>
+              ))}
             </Flex>
             <Flex className="w-full">
               <Dialog.Cancel

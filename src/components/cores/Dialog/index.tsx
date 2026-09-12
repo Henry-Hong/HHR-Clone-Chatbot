@@ -8,7 +8,7 @@ export default function Dialog({ children }: { children?: React.ReactNode }) {
   const open = () => dialogRef.current?.showModal();
   const close = () => dialogRef.current?.close();
 
-  return <ModalContext.Provider value={{ dialogRef, open, close }}>{children}</ModalContext.Provider>;
+  return <ModalContext value={{ dialogRef, open, close }}>{children}</ModalContext>;
 }
 
 Dialog.Content = function Content({ children, className }: { children: React.ReactNode; className?: string }) {

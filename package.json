@@ -5,11 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "icon": "node ./src/components/cores/Svg/getIconNames.js && npx prettier --write ./src/components/cores/Svg/types.ts --config ./.prettierrc",
+    "build": "yarn typecheck && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "node --test lambda/*.test.mjs",
+    "test": "node --test lambda/*.test.mjs admin/__tests__/*.test.ts",
     "content:import": "node scripts/lex-to-content.mjs",
     "content:publish": "bash scripts/publish-content.sh",
     "content:rollback": "bash scripts/rollback-content.sh",
@@ -18,22 +17,27 @@
     "gen:ui": "node scripts/gen-ui-content.mjs",
     "predev": "node scripts/gen-ui-content.mjs",
     "prebuild": "node scripts/gen-ui-content.mjs",
-    "admin": "vite --config vite.admin.config.ts"
+    "admin": "vite --config vite.admin.config.ts",
+    "pretest": "npm --prefix lambda install --no-package-lock --silent",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit"
   },
   "dependencies": {
+    "@blueprintjs/core": "^6.18.0",
+    "@blueprintjs/icons": "^6.13.0",
+    "@blueprintjs/select": "^6.3.4",
     "@tanstack/react-query": "^5.29.2",
     "@tanstack/react-query-devtools": "^5.29.2",
     "class-variance-authority": "^0.7.0",
-    "framer-motion": "12.0.0-alpha.0",
-    "lodash": "^4.17.21",
-    "react": "19.0.0-rc-fb9a90fa48-20240614",
-    "react-dom": "19.0.0-rc-fb9a90fa48-20240614",
+    "framer-motion": "^13.2.0",
+    "lucide-react": "^1.45.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "tailwind-merge": "^2.3.0"
   },
   "devDependencies": {
-    "@types/lodash": "^4.17.0",
-    "@types/react": "npm:types-react@rc",
-    "@types/react-dom": "npm:types-react-dom@rc",
+    "@types/node": "^22.20.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
     "@vitejs/plugin-react": "^4.2.1",
@@ -47,10 +51,6 @@
     "vite": "^5.2.0",
     "vite-plugin-svgr": "^4.2.0",
     "vite-tsconfig-paths": "^4.3.2"
-  },
-  "overrides": {
-    "@types/react": "npm:types-react@rc",
-    "@types/react-dom": "npm:types-react-dom@rc"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
