@@ -133,6 +133,27 @@ CloudWatch에서 `hit:false` 로그를 모아 빈도순으로 보여줍니다.
 `⌘Z`가 쓸모없어지기 때문입니다. 되돌리기는 브라우저 기본 실행취소가 아니라
 어드민의 편집 이력을 되돌립니다 (블록 삭제·순서 변경까지 포함).
 
+## 테스트
+
+```bash
+yarn test        # lambda + 어드민 (82개)
+```
+
+발행을 막는 검증 로직은 테스트로 고정해뒀습니다. 특히 **버튼이 등록되지 않은 발화를
+보내는 케이스**(실제로 프로덕션에 있던 버그)와 **블록 id가 저장 파일에 새지 않는지**는
+회귀하면 바로 드러납니다.
+
+| 파일 | 무엇을 |
+|---|---|
+| `__tests__/validate.test.ts` | 발행 잠금 조건 — 발화 중복, 등록 안 된 발화, 태그, URL, id 규칙 |
+| `__tests__/entries.test.ts` | 정렬·복제·패치, uid가 JSON에 안 나오는지 |
+| `__tests__/store.test.ts` | 되돌리기 이력, 타이핑 묶음, dirty |
+| `__tests__/html.test.ts` | 허용 태그 / 짝 안 맞는 태그 |
+
+`node --test`가 타입 스트리핑으로 `.ts`를 그대로 돌리므로 테스트 러너를 따로 두지
+않았습니다. 대신 **테스트가 닿는 모듈은 상대 import에 `.ts`를 붙입니다.** Node의 ESM
+해석기는 확장자를 생략할 수 없기 때문입니다 (`admin/validate.ts`, `admin/lib/entries.ts`).
+
 ## 구조
 
 ```
@@ -148,6 +169,7 @@ admin/
     html.ts            텍스트 블록 태그 검사
     useDragList.ts     손잡이 드래그로 목록 정렬
     useSplit.ts        패널 폭 조절
+  __tests__/           검증·변환·되돌리기 테스트 (node --test)
   components/          Navbar · 목록 · 편집기 · 블록 · 미리보기 · 검증 · 다이얼로그
     blocks/HtmlEditor.tsx     서식 버튼 + HTML 원문 textarea
     blocks/UtteranceInput.tsx 발화 자동완성 + 소속 인텐트 표시

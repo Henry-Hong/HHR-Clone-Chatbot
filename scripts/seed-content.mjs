@@ -73,7 +73,12 @@ const content = {
       enabled: true,
       showInFaq: true,
       order: 3,
-      utterances: { ko: ['자기소개', '너 누구야', '소개해줘'], en: ['who are you', 'introduce yourself'] },
+      // 'self introduction'은 __initial / __home의 영어 버튼이 보내는 발화다.
+      // 등록해두지 않으면 Lex 퍼지 매칭에 기대게 된다.
+      utterances: {
+        ko: ['자기소개', '너 누구야', '소개해줘'],
+        en: ['who are you', 'introduce yourself', 'self introduction'],
+      },
       blocks: {
         ko: [
           { type: 'text', html: '<p>(시드 데이터) 프론트엔드 엔지니어 <mark>홍희림</mark>입니다.</p>' },
@@ -127,13 +132,31 @@ const content = {
       },
     },
     {
+      // __fallback 화면의 버튼이 '자주 묻는 질문 보기' / 'faq'를 보낸다.
+      id: 'FaqIntent',
+      title: '자주 묻는 질문',
+      kind: 'intent',
+      enabled: true,
+      showInFaq: false,
+      order: 6,
+      utterances: { ko: ['자주 묻는 질문 보기', '자주 묻는 질문'], en: ['faq', 'common questions'] },
+      blocks: {
+        ko: [{ type: 'text', html: '<p>(시드 데이터) 자주 묻는 질문 목록이 들어갈 자리입니다.</p>' }],
+        en: [{ type: 'text', html: '<p>(seed) Frequently asked questions go here.</p>' }],
+      },
+    },
+    {
       id: 'SystemArchitectureIntent',
       title: '시스템 구조',
       kind: 'intent',
       enabled: true,
       showInFaq: false,
       order: 6,
-      utterances: { ko: ['시스템 구조', '어떻게 만들었어'], en: ['how did you build this'] },
+      // 'system architecture'는 __initial / __home의 영어 버튼이 보내는 발화다.
+      utterances: {
+        ko: ['시스템 구조', '어떻게 만들었어'],
+        en: ['how did you build this', 'system architecture'],
+      },
       blocks: {
         ko: [{ type: 'text', html: '<p>(시드 데이터) S3 + Lex + Lambda로 만들었습니다.</p>' }],
         en: [],
@@ -142,6 +165,66 @@ const content = {
   ],
 };
 
+/**
+ * 버튼이 보내는 발화 중 어느 인텐트에도 등록되지 않은 것을 찾아 스텁 인텐트에 붙인다.
+ *
+ * 그 상태로 두면 챗봇이 Lex 퍼지 매칭에 기대게 되고, 어드민 검증과
+ * `lambda/index.test.mjs`가 모두 오류로 잡는다. 위에서 손으로 맞춰뒀지만
+ * src/generated/ui-content.ts가 바뀌면 다시 어긋날 수 있어 안전망을 둔다.
+ */
+const linkDanglingUtterances = (entries) => {
+  const askUtterances = (entry, locale) =>
+    (entry.blocks[locale] ?? [])
+      .filter((block) => block.type === 'actions')
+      .flatMap((block) => block.items)
+      .filter((item) => item.kind === 'ask')
+      .map((item) => item.utterance);
+
+  for (const locale of ['ko', 'en']) {
+    const known = new Set(entries.flatMap((entry) => entry.utterances[locale] ?? []));
+    const dangling = [...new Set(entries.flatMap((entry) => askUtterances(entry, locale)))].filter(
+      (utterance) => utterance && !known.has(utterance)
+    );
+    if (!dangling.length) continue;
+
+    console.warn(`⚠️  [${locale}] 인텐트에 없는 발화 ${dangling.length}개를 스텁에 붙입니다: ${dangling.join(', ')}`);
+
+    let stub = entries.find((entry) => entry.id === 'SeedMiscIntent');
+    if (!stub) {
+      stub = {
+        id: 'SeedMiscIntent',
+        title: '기타 (시드 자동 생성)',
+        kind: 'intent',
+        enabled: true,
+        showInFaq: false,
+        order: entries.length,
+        utterances: { ko: [], en: [] },
+        blocks: {
+          ko: [{ type: 'text', html: '<p>(시드 데이터) 아직 답변이 준비되지 않았습니다.</p>' }],
+          en: [{ type: 'text', html: '<p>(seed) No answer prepared yet.</p>' }],
+        },
+      };
+      entries.push(stub);
+    }
+    stub.utterances[locale] = [...stub.utterances[locale], ...dangling];
+  }
+
+  return entries;
+};
+
+linkDanglingUtterances(content.entries);
+
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, `${JSON.stringify(content, null, 2)}\n`, 'utf8');
+
+/*
+ * 시드로 만든 콘텐츠라는 표시.
+ *
+ * gen-ui-content.mjs가 이걸 보고 src/generated/ui-content.ts를 덮어쓰지 않는다.
+ * 그 파일은 git에 커밋되고 그대로 프로덕션에 나가므로, 시드 상태로 빌드했다가
+ * 인사말이 "(시드 데이터)"로 바뀐 채 커밋되면 알아채기 어렵다.
+ */
+fs.writeFileSync(path.join(path.dirname(OUT), '.seeded'), `${new Date().toISOString()}\n`, 'utf8');
+
 console.log(`✅ ${OUT} 생성 (엔트리 ${content.entries.length}개) — 더미 데이터입니다.`);
+console.log('   실제 콘텐츠로 바꾸려면: aws s3 cp s3://$CONTENT_BUCKET/content/current.json content/current.json');

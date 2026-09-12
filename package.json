@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "yarn typecheck && vite build",
     "icon": "node ./src/components/cores/Svg/getIconNames.js && npx prettier --write ./src/components/cores/Svg/types.ts --config ./.prettierrc",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "node --test lambda/*.test.mjs",
+    "test": "node --test lambda/*.test.mjs admin/__tests__/*.test.ts",
     "content:import": "node scripts/lex-to-content.mjs",
     "content:publish": "bash scripts/publish-content.sh",
     "content:rollback": "bash scripts/rollback-content.sh",
@@ -18,7 +18,9 @@
     "gen:ui": "node scripts/gen-ui-content.mjs",
     "predev": "node scripts/gen-ui-content.mjs",
     "prebuild": "node scripts/gen-ui-content.mjs",
-    "admin": "vite --config vite.admin.config.ts"
+    "admin": "vite --config vite.admin.config.ts",
+    "pretest": "npm --prefix lambda install --no-package-lock --silent",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit"
   },
   "dependencies": {
     "@blueprintjs/core": "^6.18.0",
@@ -35,6 +37,7 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.17.0",
+    "@types/node": "^22.20.2",
     "@types/react": "npm:types-react@rc",
     "@types/react-dom": "npm:types-react-dom@rc",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
