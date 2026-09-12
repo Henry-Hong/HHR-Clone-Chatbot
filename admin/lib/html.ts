@@ -3,7 +3,30 @@
  * 어드민은 나 혼자 쓰지만, 오타 난 태그가 그대로 프로덕션에 나가는 건 막아야 한다.
  */
 
-export const ALLOWED_TAGS = ['p', 'br', 'b', 'strong', 'em', 'mark', 'ul', 'ol', 'li', 'a'] as const;
+/**
+ * 말풍선 안에서 실제로 보이는 태그만 허용한다.
+ *
+ * Tailwind preflight가 목록·문단·링크를 리셋하기 때문에 그냥 두면
+ * "어드민은 허용한다는데 화면에는 아무 차이가 없는" 태그가 생긴다.
+ * src/index.css의 `.chat-richtext` 규칙이 이 목록을 실제로 보이게 만든다.
+ * 둘 중 하나만 바꾸면 어긋나므로 같이 바꿔야 한다.
+ */
+export const ALLOWED_TAGS = [
+  'p',
+  'br',
+  'b',
+  'strong',
+  'i',
+  'em',
+  'u',
+  's',
+  'mark',
+  'code',
+  'ul',
+  'ol',
+  'li',
+  'a',
+] as const;
 
 const TAG = /<\s*\/?\s*([a-zA-Z][a-zA-Z0-9-]*)/g;
 

@@ -96,7 +96,7 @@ export default function EntryListPanel({
 
   return (
     <>
-      <div className="admin-border-b" style={{ padding: 8, display: 'flex', gap: 6 }}>
+      <div className="admin-border-b admin-pad admin-row">
         <InputGroup
           fill
           leftIcon="search"
@@ -133,7 +133,7 @@ export default function EntryListPanel({
 
       <div className="admin-scroll" style={{ flex: 1 }}>
         {visible.length === 0 && (
-          <div style={{ padding: '32px 8px' }}>
+          <div className="admin-empty--tall">
             <NonIdealState
             icon="search"
             title="해당하는 항목이 없어요"
@@ -201,7 +201,7 @@ export default function EntryListPanel({
                 </span>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div className="admin-inline-xs">
                     <span className="admin-entry__title" style={{ flex: 1 }}>
                       {entry.title || <em className={Classes.TEXT_MUTED}>(제목 없음)</em>}
                     </span>
@@ -228,7 +228,7 @@ export default function EntryListPanel({
         })}
       </div>
 
-      <div className="admin-border-t" style={{ padding: 8 }}>
+      <div className="admin-border-t admin-pad">
         <Button fill icon="add" text="새 인텐트" onClick={onCreate} />
       </div>
     </>

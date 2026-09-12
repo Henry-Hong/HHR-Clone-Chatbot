@@ -1,5 +1,33 @@
 /* 어드민 전용 보정. 챗봇 스타일(index.css)과 Blueprint를 함께 쓴다. */
 
+/* -------------------------------------------------------------------------- */
+/*                                 토큰                                        */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * 간격은 4px 배수 하나로만 쓴다.
+ * 값을 그때그때 눈대중으로 정하면 6·7·10px이 섞여서 줄마다 미묘하게 어긋난다.
+ */
+:root {
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+
+  --admin-gutter: #d3d8de;
+  --admin-surface: #ffffff;
+  --admin-sunken: #f6f7f9;
+  --admin-border: #d3d8de;
+}
+
+.bp6-dark {
+  --admin-gutter: #1c2127;
+  --admin-surface: #252a31;
+  --admin-sunken: #1c2127;
+  --admin-border: #383e47;
+}
+
 html,
 body,
 #root {
@@ -9,6 +37,81 @@ body,
 body {
   margin: 0;
   overflow: hidden;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              간격 유틸리티                                   */
+/* -------------------------------------------------------------------------- */
+
+.admin-stack,
+.admin-stack-sm,
+.admin-stack-xs {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.admin-stack {
+  gap: var(--sp-3);
+}
+.admin-stack-sm {
+  gap: var(--sp-2);
+}
+.admin-stack-xs {
+  gap: var(--sp-1);
+}
+
+.admin-inline,
+.admin-inline-xs {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.admin-inline {
+  gap: var(--sp-2);
+}
+.admin-inline-xs {
+  gap: var(--sp-1);
+}
+.admin-inline--wrap {
+  flex-wrap: wrap;
+}
+
+/** 카드 안에서 순서를 바꾸는 줄 (갤러리 이미지 · 버튼 · 변형) */
+.admin-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.admin-row--top {
+  align-items: flex-start;
+}
+.admin-row--dragging {
+  opacity: 0.4;
+}
+.admin-row--over {
+  box-shadow: 0 -2px 0 #2d72d2;
+}
+
+.admin-pad {
+  padding: var(--sp-2);
+}
+.admin-pad-lg {
+  padding: var(--sp-4);
+}
+
+/** 설명 한 줄. 본문보다 작고 흐리게. */
+.admin-hint {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/** NonIdealState를 감싸는 빈 영역 */
+.admin-empty {
+  padding: var(--sp-6) var(--sp-2);
+}
+.admin-empty--tall {
+  padding: calc(var(--sp-6) * 2) var(--sp-2);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -34,6 +137,10 @@ body {
   min-width: 0;
 }
 
+.admin-pane--side {
+  flex: 0 0 auto;
+}
+
 .admin-pane--center {
   flex: 1;
   overflow-y: auto;
@@ -56,23 +163,16 @@ body {
   background: #2d72d2;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                     색                                      */
-/* -------------------------------------------------------------------------- */
-
-:root {
-  --admin-gutter: #d3d8de;
-  --admin-surface: #ffffff;
-  --admin-sunken: #f6f7f9;
-  --admin-border: #d3d8de;
+/* 편집 영역은 너무 넓어지면 한 줄이 길어져 읽기 나쁘다 */
+.admin-editor {
+  padding: var(--sp-4);
+  max-width: 820px;
+  margin: 0 auto;
 }
 
-.bp6-dark {
-  --admin-gutter: #1c2127;
-  --admin-surface: #252a31;
-  --admin-sunken: #1c2127;
-  --admin-border: #383e47;
-}
+/* -------------------------------------------------------------------------- */
+/*                                    색                                       */
+/* -------------------------------------------------------------------------- */
 
 .admin-surface {
   background: var(--admin-surface);
@@ -100,8 +200,9 @@ body {
 .admin-entry {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
-  padding: 7px 8px 7px 4px;
+  gap: var(--sp-1);
+  padding: var(--sp-2);
+  padding-left: var(--sp-1);
   border-bottom: 1px solid var(--admin-border);
   cursor: pointer;
   user-select: none;
@@ -158,23 +259,29 @@ body {
 }
 .admin-block__grip {
   cursor: grab;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-1);
+  opacity: 0.5;
 }
 .admin-block__grip:active {
   cursor: grabbing;
 }
 
-/* 갤러리 이미지 · 버튼처럼 카드 안에서 순서를 바꾸는 줄 */
-.admin-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  min-width: 0;
+/* 서식 버튼 줄 */
+.admin-toolbar {
+  flex-wrap: wrap;
 }
-.admin-row--dragging {
-  opacity: 0.4;
+.admin-toolbar .bp6-divider {
+  margin: 0 var(--sp-1);
 }
-.admin-row--over {
-  box-shadow: 0 -2px 0 #2d72d2;
+
+/* 텍스트 블록 편집기는 HTML을 직접 만지므로 고정폭이 읽기 편하다 */
+.admin-mono textarea,
+textarea.admin-mono {
+  font-family: var(--bp6-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .admin-thumb {
@@ -185,13 +292,10 @@ body {
   background: var(--admin-sunken);
   flex: 0 0 auto;
 }
-
-/* 텍스트 블록 편집기는 HTML을 직접 만지므로 고정폭이 읽기 편하다 */
-.admin-mono textarea,
-textarea.admin-mono {
-  font-family: var(--bp6-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);
-  font-size: 12px;
-  line-height: 1.6;
+.admin-thumb--empty {
+  display: grid;
+  place-items: center;
+  opacity: 0.4;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -206,10 +310,8 @@ textarea.admin-mono {
   background: #ffffff;
   color: #1c2127;
   border-radius: 6px;
-}
-
-.admin-preview a {
-  text-decoration: none;
+  padding: var(--sp-4);
+  min-height: 120px;
 }
 
 /*
@@ -223,4 +325,9 @@ textarea.admin-mono {
 
 .admin-preview img {
   max-width: 100%;
+}
+
+/** InputGroup의 rightElement로 넣는 아이콘. 입력칸 높이에 맞춘다. */
+.admin-input-adornment {
+  padding: var(--sp-2) var(--sp-2) 0 0;
 }

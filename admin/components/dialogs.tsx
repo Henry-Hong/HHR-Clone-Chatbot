@@ -192,9 +192,9 @@ export function AddUtteranceDialog({
   return (
     <Dialog isOpen={!!question} onClose={onClose} title="인텐트에 발화 추가" icon="chat">
       <DialogBody>
-        <Callout compact icon="inbox" style={{ marginBottom: 12 }}>
+        <Callout compact icon="inbox" style={{ marginBottom: 'var(--sp-3)' }}>
           <strong>{question}</strong>
-          <div className={Classes.TEXT_MUTED} style={{ fontSize: 11, marginTop: 2 }}>
+          <div className={`${Classes.TEXT_MUTED} admin-hint`}>
             {locale} 발화로 추가됩니다. 추가 후 <strong>Lex 발행</strong>을 해야 실제로 반영됩니다.
           </div>
         </Callout>

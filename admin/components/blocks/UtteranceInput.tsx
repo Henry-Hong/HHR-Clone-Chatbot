@@ -39,7 +39,7 @@ export default function UtteranceInput({ value, ownerOf, suggestions, onChange }
               <Icon
                 icon={owner ? 'tick-circle' : 'warning-sign'}
                 intent={owner ? 'success' : 'danger'}
-                style={{ padding: '7px 7px 0 0' }}
+                className="admin-input-adornment"
               />
             </Tooltip>
           ) : undefined

@@ -14,7 +14,7 @@ export default function IssuesPanel({ issues, entries, onSelect }: Props) {
 
   if (issues.length === 0) {
     return (
-      <div style={{ padding: 24 }}>
+      <div className="admin-empty">
         <NonIdealState
         icon="tick-circle"
         title="문제 없음"
@@ -29,8 +29,8 @@ export default function IssuesPanel({ issues, entries, onSelect }: Props) {
   const warns = issues.filter((issue) => issue.level === 'warn');
 
   return (
-    <div className="admin-scroll" style={{ flex: 1, padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ display: 'flex', gap: 6 }}>
+    <div className="admin-scroll admin-pad admin-stack-sm" style={{ flex: 1 }}>
+      <div className="admin-row">
         <Tag intent="danger" minimal={errors.length === 0} icon="error">
           오류 {errors.length}
         </Tag>
@@ -49,7 +49,7 @@ export default function IssuesPanel({ issues, entries, onSelect }: Props) {
           onClick={() => issue.entryId && onSelect(issue.entryId)}
         >
           <div style={{ fontSize: 12 }}>{issue.message}</div>
-          <div className={Classes.TEXT_MUTED} style={{ fontSize: 11, marginTop: 2 }}>
+          <div className={`${Classes.TEXT_MUTED} admin-hint`}>
             {titleOf(issue.entryId)}
             {issue.locale && ` · ${issue.locale}`}
             {issue.hint && ` · ${issue.hint}`}

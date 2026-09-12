@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Callout, Classes, NonIdealState, Tag } from '@blueprintjs/core';
+import { Callout, Classes, NonIdealState, Switch, Tag, Tooltip } from '@blueprintjs/core';
 import Avatar from '@/components/cores/Avatar';
 import Flex from '@/components/cores/Flex';
 import BlockRenderer from '@/components/customs/Main/Chat/Blocks';
@@ -27,6 +27,13 @@ export default function PreviewPanel({
   const [clickedBtns, setClicked] = useState<string[]>([]);
 
   /*
+   * 챗봇은 `isLast`를 답변 하나 전체에 같은 값으로 준다 (Chat/index.tsx).
+   * 방금 도착한 답변이면 말풍선 테두리와 버튼이 진해지고, 뒤로 밀리면 흐려진다.
+   * 기본값은 "방금 도착한 상태"이고, 토글로 밀려난 뒤 모습도 확인할 수 있다.
+   */
+  const [isLatest, setIsLatest] = useState(true);
+
+  /*
    * 아래 바깥 레이아웃은 챗봇 페이지의 것이고, 진짜 재사용 대상은 그 안의 BlockRenderer다.
    * 챗봇 본문은 화면 폭을 다 쓰지만 미리보기 패널은 좁으므로 `shrink-0 w-full` 대신
    * 줄어들 수 있게 바꾼다. 안 그러면 아바타 폭만큼 말풍선이 오른쪽으로 잘린다.
@@ -47,14 +54,14 @@ export default function PreviewPanel({
 
   return (
     <AppContext.Provider value={context}>
-      <div className="admin-scroll" style={{ flex: 1, padding: 10 }}>
+      <div className="admin-scroll admin-pad admin-stack-sm" style={{ flex: 1 }}>
         {isFallback && (
-          <Callout compact icon="translate" intent="warning" style={{ marginBottom: 8 }}>
+          <Callout compact icon="translate" intent="warning">
             이 언어에는 답변이 없어서 기본 언어 답변이 나갑니다.
           </Callout>
         )}
 
-        <div className="admin-preview" style={{ padding: 16, minHeight: 120 }}>
+        <div className="admin-preview">
           {showing.length === 0 ? (
             <NonIdealState
               icon="chat"
@@ -67,9 +74,9 @@ export default function PreviewPanel({
             <Flex className="flex-row items-start justify-start gap-3">
               <Avatar />
               <Flex variants="verticalLeft" className="gap-2 min-w-0 flex-1">
-                {showing.map((block, index) => (
+                {showing.map((block) => (
                   <div key={uidOf(block)} className="w-full">
-                    <BlockRenderer block={block} isLast={index === showing.length - 1} />
+                    <BlockRenderer block={block} isLast={isLatest} />
                   </div>
                 ))}
               </Flex>
@@ -77,10 +84,21 @@ export default function PreviewPanel({
           )}
         </div>
 
-        <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          <Tag minimal icon="mobile-phone">
-            챗봇과 같은 렌더러
-          </Tag>
+        <div className="admin-inline admin-inline--wrap">
+          <Tooltip compact content="미리보기는 챗봇이 쓰는 BlockRenderer를 그대로 씁니다.">
+            <Tag minimal icon="mobile-phone">
+              챗봇과 같은 렌더러
+            </Tag>
+          </Tooltip>
+          <Tooltip compact content="방금 도착한 답변인지 / 대화가 더 이어진 뒤인지. 테두리와 버튼 색이 달라집니다.">
+            <Switch
+              checked={isLatest}
+              label="최신 답변"
+              inline
+              style={{ margin: 0 }}
+              onChange={(event) => setIsLatest(event.currentTarget.checked)}
+            />
+          </Tooltip>
           {clickedBtns.length > 0 && (
             <Tag
               minimal

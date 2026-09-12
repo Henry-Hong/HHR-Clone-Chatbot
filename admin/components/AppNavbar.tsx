@@ -90,12 +90,12 @@ export default function AppNavbar({
           </Tag>
         )}
         {errorCount > 0 && (
-          <Tag intent="danger" icon="error" interactive onClick={onShowErrors} style={{ marginLeft: 6 }}>
+          <Tag intent="danger" icon="error" interactive onClick={onShowErrors} style={{ marginLeft: 'var(--sp-2)' }}>
             오류 {errorCount}
           </Tag>
         )}
         {errorCount === 0 && warnCount > 0 && (
-          <Tag minimal intent="warning" icon="warning-sign" interactive onClick={onShowErrors} style={{ marginLeft: 6 }}>
+          <Tag minimal intent="warning" icon="warning-sign" interactive onClick={onShowErrors} style={{ marginLeft: 'var(--sp-2)' }}>
             경고 {warnCount}
           </Tag>
         )}
@@ -150,7 +150,7 @@ export default function AppNavbar({
                 </MenuItem>
               ))}
               {blocker && (
-                <Callout intent="warning" compact style={{ margin: 5, maxWidth: 240 }}>
+                <Callout intent="warning" compact style={{ margin: 'var(--sp-1)', maxWidth: 240 }}>
                   {blocker}
                 </Callout>
               )}
@@ -163,7 +163,7 @@ export default function AppNavbar({
             text="발행"
             loading={!!busy && busy !== '저장'}
             disabled={!!busy}
-            style={{ marginLeft: 6 }}
+            style={{ marginLeft: 'var(--sp-2)' }}
           />
         </Popover>
 

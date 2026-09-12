@@ -1,7 +1,6 @@
 import {
   Button,
   ButtonGroup,
-  Callout,
   Classes,
   HTMLSelect,
   Icon,
@@ -9,14 +8,13 @@ import {
   Section,
   SectionCard,
   Tag,
-  TextArea,
   Tooltip,
 } from '@blueprintjs/core';
 import type { Action, Block, GalleryBlock, ImageBlock, TextBlock } from '@/types/content';
 import { TYPE_ICON, TYPE_LABEL, summarize } from '../blockFactory';
-import { disallowedTags, hasUnbalancedTags } from '../lib/html';
 import { uidOf } from '../lib/uid';
 import { useDragList } from '../lib/useDragList';
+import HtmlEditor from './blocks/HtmlEditor';
 import UtteranceInput from './blocks/UtteranceInput';
 
 /** 블록을 바꾸면서, 연속 입력이면 되돌리기 단계를 묶을 키를 함께 넘긴다. */
@@ -82,7 +80,7 @@ export default function BlockCard({
             <Button icon="trash" intent="danger" onClick={onRemove} aria-label="삭제" />
           </Tooltip>
           <span {...dragHandle} className="admin-block__grip" title="드래그해서 순서 변경">
-            <Icon icon="drag-handle-vertical" size={12} style={{ opacity: 0.5, padding: '6px 4px' }} />
+            <Icon icon="drag-handle-vertical" size={12} />
           </span>
         </ButtonGroup>
       }
@@ -105,82 +103,71 @@ export default function BlockCard({
 }
 
 /* -------------------------------------------------------------------------- */
+/*                                    변형                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * 같은 질문에 매번 다른 답이 나가게 하는 후보 목록.
+ * 렌더 시점에 원본 + 변형 중 하나를 무작위로 고른다 (lambda의 resolveBlock).
+ */
+function VariationHeader({ count, onAdd }: { count: number; onAdd: () => void }) {
+  return (
+    <div className="admin-inline">
+      <Tag minimal icon="comparison">
+        변형 {count}
+      </Tag>
+      <span className={`${Classes.TEXT_MUTED} admin-hint`} style={{ flex: 1 }}>
+        같은 질문에 매번 다른 답이 나가게 합니다. 답할 때 원본 포함 하나를 무작위로 고릅니다.
+      </span>
+      <Button size="small" variant="minimal" icon="add" text="변형" onClick={onAdd} />
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                    텍스트                                    */
 /* -------------------------------------------------------------------------- */
 
 function TextBody({ block, onChange }: { block: TextBlock; onChange: Change }) {
-  const bad = disallowedTags(block.html);
-  const unbalanced = hasUnbalancedTags(block.html);
   const variations = block.variations ?? [];
 
   const setVariations = (next: string[], coalesce?: string) =>
     onChange({ ...block, variations: next.length ? next : undefined }, coalesce);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <TextArea
-        fill
-        autoResize
-        className="admin-mono"
+    <div className="admin-stack-sm">
+      <HtmlEditor
         value={block.html}
-        intent={bad.length || unbalanced ? 'danger' : 'none'}
-        onChange={(event) => onChange({ ...block, html: event.currentTarget.value }, 'html')}
-        style={{ minHeight: 72 }}
+        coalesceKey="html"
+        onChange={(html, coalesce) => onChange({ ...block, html }, coalesce)}
       />
 
-      {(bad.length > 0 || unbalanced) && (
-        <Callout intent="danger" compact icon="error">
-          {bad.length > 0 && <div>허용되지 않은 태그: {bad.map((tag) => `<${tag}>`).join(', ')}</div>}
-          {unbalanced && <div>닫히지 않은 태그가 있어요.</div>}
-        </Callout>
-      )}
+      <VariationHeader count={variations.length} onAdd={() => setVariations([...variations, '<p></p>'])} />
 
-      <div className={Classes.TEXT_MUTED} style={{ fontSize: 11 }}>
-        허용 태그 {'<p> <br> <b> <strong> <em> <mark> <ul> <ol> <li> <a>'}
-      </div>
-
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: variations.length ? 6 : 0 }}>
-          <Tag minimal icon="comparison">
-            변형 {variations.length}
-          </Tag>
-          <span className={Classes.TEXT_MUTED} style={{ fontSize: 11, flex: 1 }}>
-            같은 질문에 매번 다른 문장이 나가게 합니다. 렌더할 때 하나를 무작위로 고릅니다.
-          </span>
-          <Button
-            size="small"
-            variant="minimal"
-            icon="add"
-            text="변형"
-            onClick={() => setVariations([...variations, '<p></p>'])}
-          />
-        </div>
-
-        {variations.map((variation, index) => (
-          <div key={index} className="admin-row" style={{ marginTop: 6, alignItems: 'flex-start' }}>
-            <TextArea
-              fill
-              autoResize
-              className="admin-mono"
+      {variations.map((variation, index) => (
+        <div key={index} className="admin-row admin-row--top">
+          <div style={{ flex: '1 1 0', minWidth: 0 }}>
+            <HtmlEditor
               value={variation}
-              onChange={(event) =>
+              coalesceKey={`variation${index}`}
+              onChange={(html, coalesce) =>
                 setVariations(
-                  variations.map((item, i) => (i === index ? event.currentTarget.value : item)),
-                  `variation${index}`
+                  variations.map((item, i) => (i === index ? html : item)),
+                  coalesce
                 )
               }
             />
-            <Button
-              size="small"
-              variant="minimal"
-              icon="cross"
-              intent="danger"
-              aria-label="변형 삭제"
-              onClick={() => setVariations(variations.filter((_, i) => i !== index))}
-            />
           </div>
-        ))}
-      </div>
+          <Button
+            size="small"
+            variant="minimal"
+            icon="cross"
+            intent="danger"
+            aria-label="변형 삭제"
+            onClick={() => setVariations(variations.filter((_, i) => i !== index))}
+          />
+        </div>
+      ))}
     </div>
   );
 }
@@ -193,38 +180,94 @@ const Thumb = ({ src }: { src: string }) =>
   /^https?:\/\//.test(src) ? (
     <img className="admin-thumb" src={src} alt="" loading="lazy" />
   ) : (
-    <div className="admin-thumb" style={{ display: 'grid', placeItems: 'center' }}>
-      <Icon icon="media" size={14} style={{ opacity: 0.4 }} />
+    <div className="admin-thumb admin-thumb--empty">
+      <Icon icon="media" size={14} />
     </div>
   );
 
-function ImageBody({ block, onChange }: { block: ImageBlock; onChange: Change }) {
+type ImageFieldValues = { src: string; alt?: string; caption?: string };
+
+/** 원본 이미지와 변형 이미지가 같은 칸을 쓴다. */
+function ImageFields({
+  value,
+  onChange,
+}: {
+  value: ImageFieldValues;
+  onChange: (next: ImageFieldValues, coalesce: string) => void;
+}) {
   return (
-    <div style={{ display: 'flex', gap: 8 }}>
-      <Thumb src={block.src} />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div className="admin-row admin-row--top">
+      <Thumb src={value.src} />
+      <div className="admin-stack-xs" style={{ flex: 1, minWidth: 0 }}>
         <InputGroup
           fill
           leftIcon="link"
           placeholder="이미지 URL (https://)"
-          value={block.src}
-          onValueChange={(src) => onChange({ ...block, src }, 'src')}
+          value={value.src}
+          intent={/^https?:\/\/\S+$/.test(value.src) ? 'none' : 'danger'}
+          onValueChange={(src) => onChange({ ...value, src }, 'src')}
         />
-        <div style={{ display: 'flex', gap: 6 }}>
-          <InputGroup
-            fill
-            placeholder="alt (대체 텍스트)"
-            value={block.alt ?? ''}
-            onValueChange={(alt) => onChange({ ...block, alt: alt || undefined }, 'alt')}
-          />
-          <InputGroup
-            fill
-            placeholder="캡션"
-            value={block.caption ?? ''}
-            onValueChange={(caption) => onChange({ ...block, caption: caption || undefined }, 'caption')}
-          />
+        <div className="admin-row">
+          <div style={{ flex: '1 1 0', minWidth: 0 }}>
+            <InputGroup
+              fill
+              placeholder="alt (대체 텍스트)"
+              value={value.alt ?? ''}
+              onValueChange={(alt) => onChange({ ...value, alt: alt || undefined }, 'alt')}
+            />
+          </div>
+          <div style={{ flex: '1 1 0', minWidth: 0 }}>
+            <InputGroup
+              fill
+              placeholder="캡션"
+              value={value.caption ?? ''}
+              onValueChange={(caption) => onChange({ ...value, caption: caption || undefined }, 'caption')}
+            />
+          </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ImageBody({ block, onChange }: { block: ImageBlock; onChange: Change }) {
+  const variations = block.variations ?? [];
+
+  const setVariations = (next: ImageFieldValues[], coalesce?: string) =>
+    onChange({ ...block, variations: next.length ? next : undefined }, coalesce);
+
+  return (
+    <div className="admin-stack-sm">
+      <ImageFields
+        value={{ src: block.src, alt: block.alt, caption: block.caption }}
+        onChange={(next, coalesce) => onChange({ ...block, ...next }, coalesce)}
+      />
+
+      <VariationHeader count={variations.length} onAdd={() => setVariations([...variations, { src: '' }])} />
+
+      {variations.map((variation, index) => (
+        <div key={index} className="admin-row admin-row--top">
+          <div style={{ flex: '1 1 0', minWidth: 0 }}>
+            <ImageFields
+              value={variation}
+              onChange={(next, coalesce) =>
+                setVariations(
+                  variations.map((item, i) => (i === index ? next : item)),
+                  `variation${index}:${coalesce}`
+                )
+              }
+            />
+          </div>
+          <Button
+            size="small"
+            variant="minimal"
+            icon="cross"
+            intent="danger"
+            aria-label="변형 삭제"
+            onClick={() => setVariations(variations.filter((_, i) => i !== index))}
+          />
+        </div>
+      ))}
     </div>
   );
 }
@@ -244,11 +287,11 @@ function GalleryBody({ block, onChange }: { block: GalleryBlock; onChange: Chang
     );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div className="admin-stack-sm">
       {images.map((image, index) => (
         <div key={uidOf(image)} {...drag.zoneProps(index)} className={drag.classFor(index, 'admin-row')}>
-          <span {...drag.handleProps(index)} style={{ cursor: 'grab' }} title="드래그해서 순서 변경">
-            <Icon icon="drag-handle-vertical" size={12} style={{ opacity: 0.4 }} />
+          <span {...drag.handleProps(index)} className="admin-block__grip" title="드래그해서 순서 변경">
+            <Icon icon="drag-handle-vertical" size={12} />
           </span>
           <Thumb src={image.src} />
           <div style={{ flex: '1 1 0', minWidth: 0 }}>
@@ -312,11 +355,11 @@ function ActionsBody({
     );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div className="admin-stack-sm">
       {items.map((action, index) => (
         <div key={uidOf(action)} {...drag.zoneProps(index)} className={drag.classFor(index, 'admin-row')}>
-          <span {...drag.handleProps(index)} style={{ cursor: 'grab' }} title="드래그해서 순서 변경">
-            <Icon icon="drag-handle-vertical" size={12} style={{ opacity: 0.4 }} />
+          <span {...drag.handleProps(index)} className="admin-block__grip" title="드래그해서 순서 변경">
+            <Icon icon="drag-handle-vertical" size={12} />
           </span>
 
           <HTMLSelect

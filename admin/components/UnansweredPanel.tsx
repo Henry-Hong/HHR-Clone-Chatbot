@@ -39,7 +39,7 @@ const DAY_OPTIONS = [
 export default function UnansweredPanel({ items, error, loading, days, onDays, onRefresh, onAdd }: Props) {
   return (
     <>
-      <div className="admin-border-b" style={{ padding: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
+      <div className="admin-border-b admin-pad admin-row">
         <HTMLSelect
           fill
           value={days}
@@ -51,24 +51,24 @@ export default function UnansweredPanel({ items, error, loading, days, onDays, o
         </Tooltip>
       </div>
 
-      <div className="admin-scroll" style={{ flex: 1, padding: 8 }}>
-        <Callout compact icon="lightbulb" style={{ marginBottom: 8 }}>
+      <div className="admin-scroll admin-pad admin-stack-sm" style={{ flex: 1 }}>
+        <Callout compact icon="lightbulb">
           답을 못 한 질문이에요. 자주 나오는 건 인텐트에 발화로 추가한 뒤 <strong>Lex 발행</strong>을 누르세요.
         </Callout>
 
         {error && (
           <Callout intent="danger" compact icon="error" title="불러오지 못했어요">
             {error}
-            <div className={Classes.TEXT_MUTED} style={{ marginTop: 4, fontSize: 11 }}>
+            <div className={`${Classes.TEXT_MUTED} admin-hint`} style={{ marginTop: 'var(--sp-1)' }}>
               AWS 자격증명(`AWS_PROFILE`)과 CloudWatch 로그 그룹 권한을 확인하세요.
             </div>
           </Callout>
         )}
 
-        {loading && !items && <Spinner size={24} style={{ marginTop: 24 }} />}
+        {loading && !items && <Spinner size={24} style={{ marginTop: 'var(--sp-6)' }} />}
 
         {items?.length === 0 && (
-          <div style={{ padding: '24px 0' }}>
+          <div className="admin-empty">
             <NonIdealState
             icon="tick-circle"
             title="못 답한 질문이 없어요"
@@ -81,12 +81,12 @@ export default function UnansweredPanel({ items, error, loading, days, onDays, o
         {items?.map((item) => (
           <div
             key={`${item.question}-${item.locale}`}
-            className="admin-border-b"
-            style={{ padding: '7px 2px', display: 'flex', gap: 6, alignItems: 'flex-start' }}
+            className="admin-border-b admin-row admin-row--top"
+            style={{ paddingBottom: 'var(--sp-2)' }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, wordBreak: 'break-all' }}>{item.question}</div>
-              <div className={Classes.TEXT_MUTED} style={{ fontSize: 11, marginTop: 2, display: 'flex', gap: 6 }}>
+              <div className={`${Classes.TEXT_MUTED} admin-hint admin-inline`}>
                 <span>
                   <Icon icon="repeat" size={10} /> {item.count}회
                 </span>
@@ -104,7 +104,7 @@ export default function UnansweredPanel({ items, error, loading, days, onDays, o
       </div>
 
       {items && items.length > 0 && (
-        <div className="admin-border-t" style={{ padding: 8 }}>
+        <div className="admin-border-t admin-pad">
           <Tag minimal fill icon="inbox">
             {items.length}종류 · 총 {items.reduce((sum, item) => sum + item.count, 0)}회
           </Tag>

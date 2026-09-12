@@ -83,9 +83,9 @@ export default function EntryEditor({
   const warns = issues.filter((issue) => issue.level === 'warn');
 
   return (
-    <div style={{ padding: 16, maxWidth: 820, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="admin-editor admin-stack">
       {/* ------------------------------- 헤더 ------------------------------- */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      <div className="admin-inline admin-inline--wrap">
         <h2 style={{ margin: 0, flex: '1 1 220px', minWidth: 0, fontSize: 18 }}>
           <EditableText
             placeholder="제목을 입력하세요"
@@ -111,7 +111,7 @@ export default function EntryEditor({
         />
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+      <div className="admin-inline admin-inline--wrap" style={{ columnGap: 'var(--sp-4)' }}>
         <Switch
           checked={entry.enabled}
           label="활성"
@@ -128,7 +128,7 @@ export default function EntryEditor({
             onChange={(event) => onPatch({ showInFaq: event.currentTarget.checked })}
           />
         )}
-        <span className={Classes.TEXT_MUTED} style={{ fontSize: 12 }}>
+        <span className={`${Classes.TEXT_MUTED} admin-hint`}>
           {LOCALE_LABEL[locale]} 편집 중
           {locale !== content.defaultLocale && blocks.length === 0 && ` · 비어 있으면 ${content.defaultLocale} 답변이 나갑니다`}
         </span>
@@ -138,22 +138,22 @@ export default function EntryEditor({
       {errors.map((issue, index) => (
         <Callout key={`e${index}`} intent="danger" compact icon="error">
           {issue.message}
-          {issue.hint && <div className={Classes.TEXT_MUTED} style={{ fontSize: 11, marginTop: 2 }}>{issue.hint}</div>}
+          {issue.hint && <div className={`${Classes.TEXT_MUTED} admin-hint`}>{issue.hint}</div>}
         </Callout>
       ))}
       {warns.map((issue, index) => (
         <Callout key={`w${index}`} intent="warning" compact icon="warning-sign">
           {issue.message}
-          {issue.hint && <div className={Classes.TEXT_MUTED} style={{ fontSize: 11, marginTop: 2 }}>{issue.hint}</div>}
+          {issue.hint && <div className={`${Classes.TEXT_MUTED} admin-hint`}>{issue.hint}</div>}
         </Callout>
       ))}
 
       {/* ------------------------------- 발화 ------------------------------- */}
       {entry.kind === 'intent' && (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
+        <div className="admin-stack-xs">
+          <div className="admin-inline" style={{ alignItems: 'baseline' }}>
             <strong style={{ fontSize: 12 }}>발화 ({locale})</strong>
-            <span className={Classes.TEXT_MUTED} style={{ fontSize: 11 }}>
+            <span className={`${Classes.TEXT_MUTED} admin-hint`}>
               Enter로 추가 · 바꾸면 <strong>Lex 발행</strong>이 필요합니다
             </span>
           </div>
@@ -178,9 +178,9 @@ export default function EntryEditor({
       )}
 
       {/* ------------------------------- 블록 ------------------------------- */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div className="admin-stack-sm">
         {blocks.length === 0 && (
-          <div style={{ padding: '24px 0' }}>
+          <div className="admin-empty">
             <NonIdealState
             icon="new-text-box"
             title={`${LOCALE_LABEL[locale]} 답변이 비어 있어요`}
@@ -235,7 +235,7 @@ export default function EntryEditor({
           );
         })}
 
-        <ButtonGroup style={{ alignSelf: 'flex-start', marginTop: 4 }}>
+        <ButtonGroup style={{ alignSelf: 'flex-start', marginTop: 'var(--sp-1)' }}>
           {BLOCK_TYPES.map((type) => (
             <Button
               key={type}

@@ -10,3 +10,58 @@ mark {
   background-size: 100% 30%;
   background-repeat: no-repeat;
 }
+
+/* -------------------------------------------------------------------------- */
+/*                           말풍선 안의 리치텍스트                             */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * 답변 본문은 content(S3)에서 온 HTML을 그대로 렌더한다.
+ * Tailwind preflight가 ul/ol/li의 마커와 들여쓰기, p의 여백을 전부 리셋하기 때문에
+ * 말풍선 안에서만 되돌려 놓는다. 안 그러면 어드민에서 목록을 만들어도
+ * 실제 화면에서는 마커 없는 평범한 줄로 나온다.
+ *
+ * 허용 태그는 admin/lib/html.ts의 ALLOWED_TAGS와 맞춘다.
+ */
+
+.chat-richtext > * + * {
+  margin-top: 0.5em;
+}
+
+.chat-richtext ul,
+.chat-richtext ol {
+  padding-left: 1.25em;
+}
+
+.chat-richtext ul {
+  list-style: disc outside;
+}
+
+.chat-richtext ol {
+  list-style: decimal outside;
+}
+
+.chat-richtext li {
+  list-style: inherit;
+}
+
+.chat-richtext li + li {
+  margin-top: 0.25em;
+}
+
+.chat-richtext a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.chat-richtext a:hover {
+  color: #1d4ed8;
+}
+
+.chat-richtext code {
+  background-color: rgb(0 0 0 / 6%);
+  border-radius: 3px;
+  padding: 0.1em 0.3em;
+  font-size: 0.9em;
+}

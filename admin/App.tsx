@@ -243,12 +243,37 @@ export default function App() {
 
   const hotkeys = useMemo<HotkeyConfig[]>(
     () => [
-      { combo: 'mod+s', global: true, label: '저장', preventDefault: true, onKeyDown: () => void save() },
-      { combo: 'mod+z', global: true, label: '되돌리기', preventDefault: true, onKeyDown: store.undo },
-      { combo: 'mod+shift+z', global: true, label: '다시 실행', preventDefault: true, onKeyDown: store.redo },
+      // allowInInput: Blueprint는 기본적으로 입력란 안에서 단축키를 무시한다.
+      // 어드민은 대부분의 시간을 입력란 안에서 보내므로 그러면 아무 데서도 안 먹는 것과 같다.
+      // 되돌리기도 store가 진짜 상태이므로 브라우저 기본 실행취소보다 이쪽이 맞다.
+      {
+        combo: 'mod+s',
+        global: true,
+        allowInInput: true,
+        label: '저장',
+        preventDefault: true,
+        onKeyDown: () => void save(),
+      },
+      {
+        combo: 'mod+z',
+        global: true,
+        allowInInput: true,
+        label: '되돌리기',
+        preventDefault: true,
+        onKeyDown: store.undo,
+      },
+      {
+        combo: 'mod+shift+z',
+        global: true,
+        allowInInput: true,
+        label: '다시 실행',
+        preventDefault: true,
+        onKeyDown: store.redo,
+      },
       {
         combo: 'mod+k',
         global: true,
+        allowInInput: true,
         label: '항목 찾기',
         preventDefault: true,
         onKeyDown: () => setOmnibarOpen(true),
@@ -256,6 +281,7 @@ export default function App() {
       {
         combo: 'mod+shift+l',
         global: true,
+        allowInInput: true,
         label: '언어 전환',
         preventDefault: true,
         onKeyDown: () => setLocale(locale === 'ko' ? 'en' : 'ko'),
@@ -270,14 +296,14 @@ export default function App() {
 
   if (loadError) {
     return (
-      <div className="admin-sunken" style={{ height: '100%', display: 'grid', placeItems: 'center', padding: 24 }}>
+      <div className="admin-sunken admin-empty" style={{ height: '100%', display: 'grid', placeItems: 'center' }}>
         <NonIdealState
           icon="error"
           title="콘텐츠를 불러오지 못했어요"
           description={
             <>
               <p>{loadError}</p>
-              <p className={Classes.TEXT_MUTED} style={{ fontSize: 12 }}>
+              <p className={`${Classes.TEXT_MUTED} admin-hint`}>
                 S3에서 먼저 받아오세요:
                 <br />
                 <code>aws s3 cp s3://$CONTENT_BUCKET/content/current.json content/current.json</code>
@@ -324,7 +350,7 @@ export default function App() {
 
       <div className="admin-body">
         {/* ------------------------------ 좌 ------------------------------- */}
-        <aside className="admin-pane admin-surface admin-border-r" style={{ width: left.width, flex: '0 0 auto' }}>
+        <aside className="admin-pane admin-pane--side admin-surface admin-border-r" style={{ width: left.width }}>
           <Tabs
             id="left"
             selectedTabId={leftTab}
@@ -386,7 +412,7 @@ export default function App() {
               onUtterances={(values) => setUtterances(selected.id, values)}
             />
           ) : (
-            <div style={{ marginTop: 80 }}>
+            <div className="admin-empty--tall">
               <NonIdealState
               icon="select"
               title="편집할 항목을 고르세요"
@@ -400,7 +426,7 @@ export default function App() {
         <div className="admin-gutter" onMouseDown={right.start('left')} role="separator" aria-orientation="vertical" />
 
         {/* ------------------------------ 우 ------------------------------- */}
-        <section className="admin-pane admin-surface admin-border-l" style={{ width: right.width, flex: '0 0 auto' }}>
+        <section className="admin-pane admin-pane--side admin-surface admin-border-l" style={{ width: right.width }}>
           <Tabs
             id="right"
             selectedTabId={rightTab}
@@ -419,7 +445,7 @@ export default function App() {
                 fallbackBlocks={locale === content.defaultLocale ? [] : blocksOf(selected, content.defaultLocale)}
               />
             ) : (
-              <div style={{ marginTop: 40 }}>
+              <div className="admin-empty--tall">
                 <NonIdealState icon="eye-open" title="미리보기" layout="vertical" />
               </div>
             )
