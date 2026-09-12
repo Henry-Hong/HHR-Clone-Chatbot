@@ -92,7 +92,10 @@ function adminApi(): Plugin {
               env: {
                 ...process.env,
                 LEX_BOT_ID: process.env.LEX_BOT_ID ?? 'QFUOZQHBTO',
-                LEX_LOCALES: process.env.LEX_LOCALES ?? 'ko_KR',
+                // 두 로케일을 모두 빌드해야 한다. 여기서 ko_KR만 넘기면 영어 인텐트는
+                // import까지만 되고 build-bot-locale이 돌지 않아, Lex가 영어 질문을
+                // 분류하지 못한 채(= 전부 FallbackIntent) 남는다.
+                LEX_LOCALES: process.env.LEX_LOCALES ?? 'ko_KR en_US',
               },
             });
             return json(200, { ok: true, log: `${build}\n${pub}` });

@@ -5,8 +5,8 @@ interface IAppContext {
   clickedBtns: string[];
   addClickedBtn: (btnValue: string) => void;
   addChat: TypeAddChat;
+  /** 화면 언어. URL이 정하고 앱 안에서는 바뀌지 않는다 (utils/locale.ts) */
   locale: Locale;
-  setLocale: (locale: Locale) => void;
 }
 
 export const AppContext = createContext<IAppContext | null>(null);
