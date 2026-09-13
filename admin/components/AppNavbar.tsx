@@ -11,7 +11,7 @@ import {
   NavbarDivider,
   NavbarGroup,
   NavbarHeading,
-  Popover,
+  PopoverNext,
   Tag,
   Tooltip,
 } from '@blueprintjs/core';
@@ -132,22 +132,36 @@ export default function AppNavbar({
           />
         </Tooltip>
 
-        <Popover
+        {/*
+         * PopoverNext(floating-ui)를 쓴다. 구버전 Popover는 react-popper 기반인데
+         * React 19 + StrictMode에서 조용히 위치 계산을 포기해서 메뉴가 화면 왼윗모서리(0,0)에 떠 버렸다.
+         * Blueprint 자체도 Tooltip·서브메뉴·ContextMenu를 이미 PopoverNext로 옮겨도다.
+         */}
+        <PopoverNext
           placement="bottom-end"
           content={
             <Menu>
               <MenuDivider title="S3 · Lex · 프론트" />
+              {/*
+               * 설명을 자식 MenuItem으로 넣으면 Blueprint가 그 항목을 서브메뉴 부모로 보고
+               * 클릭을 "서브메뉴 열기"로 가로채는다. onClick이 아예 불리지 않아 발행이 안 됐다.
+               * 설명은 항목 안의 둘째 줄로 내린다.
+               */}
               {PUBLISH_ACTIONS.map(({ kind, icon, text, note }) => (
                 <MenuItem
                   key={kind}
+                  multiline
                   icon={icon}
-                  text={text}
+                  text={
+                    <span className="admin-stack-xs" style={{ maxWidth: 260 }}>
+                      <span>{text}</span>
+                      <span className={`${Classes.TEXT_MUTED} admin-hint`}>{note}</span>
+                    </span>
+                  }
                   label={kind === 'lex' ? '느림' : undefined}
                   disabled={!!blocker || !!busy}
                   onClick={() => onPublish(kind)}
-                >
-                  <MenuItem text={note} disabled />
-                </MenuItem>
+                />
               ))}
               {blocker && (
                 <Callout intent="warning" compact style={{ margin: 'var(--sp-1)', maxWidth: 240 }}>
@@ -165,7 +179,7 @@ export default function AppNavbar({
             disabled={!!busy}
             style={{ marginLeft: 'var(--sp-2)' }}
           />
-        </Popover>
+        </PopoverNext>
 
         <NavbarDivider />
 

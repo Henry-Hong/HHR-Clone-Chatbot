@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useSyncExternalStore } from 'react';
-import { Button, ButtonGroup, Callout, Classes, Divider, Popover, TextArea, Tooltip } from '@blueprintjs/core';
+import { Button, ButtonGroup, Callout, Classes, Divider, PopoverNext, TextArea, Tooltip } from '@blueprintjs/core';
 import type { IconName } from '@blueprintjs/icons';
 import { ALLOWED_TAGS, disallowedTags, hasUnbalancedTags, sanitizeHtml } from '../../lib/html';
 
@@ -343,7 +343,8 @@ export default function HtmlEditor({ value, onChange, coalesceKey, rows }: Props
           </Tooltip>
 
           {/* 허용 태그 안내는 블록마다 두 줄씩 차지하던 것을 여기로 접어 넣었다 */}
-          <Popover
+          {/* 구버전 Popover는 React 19에서 위치 계산을 포기한다 (AppNavbar 주석 참고) */}
+          <PopoverNext
             placement="bottom-end"
             content={
               <div className="admin-popover-note">
@@ -357,7 +358,7 @@ export default function HtmlEditor({ value, onChange, coalesceKey, rows }: Props
             }
           >
             <Button icon="help" aria-label="허용 태그" />
-          </Popover>
+          </PopoverNext>
         </span>
       </ButtonGroup>
 
