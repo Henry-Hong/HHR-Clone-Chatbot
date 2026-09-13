@@ -22,8 +22,18 @@ export type State = {
   present: ContentFile | null;
   past: ContentFile[];
   future: ContentFile[];
-  /** 마지막 저장 이후 바뀐 게 있는가 */
+  /** 마지막 저장 이후 바뀐 게 있는가. `step !== savedStep`에서 파생된다. */
   dirty: boolean;
+  /**
+   * 되돌리기 이력에서 지금 몇 번째 칸에 있는가.
+   *
+   * dirty를 그냥 boolean으로 세워두면 ⌘Z로 전부 되돌려 저장된 내용과 똑같아져도
+   * "저장 안 됨"이 계속 떠 있고 창을 닫을 때 경고까지 나온다.
+   * past.length로 세면 LIMIT을 넘겨 앞이 잘릴 때 기준이 어긋나므로 따로 센다.
+   */
+  step: number;
+  /** 마지막으로 저장한 시점의 step */
+  savedStep: number;
   /** 직전 편집이 묶임 대상이었다면 그 키와 시각 */
   lastKey: string | null;
   lastAt: number;
@@ -38,7 +48,16 @@ export type Action =
   | { type: 'redo' }
   | { type: 'saved'; updatedAt: string };
 
-const initial: State = { present: null, past: [], future: [], dirty: false, lastKey: null, lastAt: 0 };
+const initial: State = {
+  present: null,
+  past: [],
+  future: [],
+  dirty: false,
+  step: 0,
+  savedStep: 0,
+  lastKey: null,
+  lastAt: 0,
+};
 
 /** 테스트에서 리듀서만 따로 돌려볼 수 있게 내보낸다. React 없이 순수하게 검증한다. */
 export const initialState = initial;
@@ -62,11 +81,17 @@ export const reducer = (state: State, action: Action): State => {
         now - state.lastAt < COALESCE_MS &&
         state.past.length > 0;
 
+      // 묶인 편집은 같은 칸을 고쳐 쓰는 것이므로 step을 올리지 않는다.
+      // (저장 직후에는 lastKey가 비어 있어 merge가 되지 않으므로 dirty를 놓칠 일은 없다.)
+      const step = merge ? state.step : state.step + 1;
+
       return {
+        ...state,
         present: next,
         past: merge ? state.past : [...state.past, state.present].slice(-LIMIT),
         future: [],
-        dirty: true,
+        step,
+        dirty: step !== state.savedStep,
         lastKey: action.coalesce ?? null,
         lastAt: now,
       };
@@ -76,10 +101,12 @@ export const reducer = (state: State, action: Action): State => {
       const previous = state.past[state.past.length - 1];
       if (!previous || !state.present) return state;
       return {
+        ...state,
         present: previous,
         past: state.past.slice(0, -1),
         future: [state.present, ...state.future],
-        dirty: true,
+        step: state.step - 1,
+        dirty: state.step - 1 !== state.savedStep,
         lastKey: null,
         lastAt: 0,
       };
@@ -89,10 +116,12 @@ export const reducer = (state: State, action: Action): State => {
       const [next, ...rest] = state.future;
       if (!next || !state.present) return state;
       return {
+        ...state,
         present: next,
         past: [...state.past, state.present],
         future: rest,
-        dirty: true,
+        step: state.step + 1,
+        dirty: state.step + 1 !== state.savedStep,
         lastKey: null,
         lastAt: 0,
       };
@@ -100,7 +129,13 @@ export const reducer = (state: State, action: Action): State => {
 
     case 'saved':
       return state.present
-        ? { ...state, present: { ...state.present, updatedAt: action.updatedAt }, dirty: false, lastKey: null }
+        ? {
+            ...state,
+            present: { ...state.present, updatedAt: action.updatedAt },
+            dirty: false,
+            savedStep: state.step,
+            lastKey: null,
+          }
         : state;
 
     default:

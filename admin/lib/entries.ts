@@ -8,8 +8,18 @@ export const LOCALE_LABEL: Record<Locale, string> = { ko: '한국어', en: 'Engl
 
 export const SYSTEM_IDS = ['__initial', '__home', '__fallback'] as const;
 
-/** Lex 인텐트 이름 규칙. 어기면 import가 실패한다. */
-export const INTENT_ID = /^[A-Za-z][A-Za-z0-9_]{0,99}$/;
+/**
+ * Lex V2 인텐트 이름 규칙. 어기면 import가 실패한다.
+ *
+ * AWS CreateIntent의 `intentName` 패턴을 그대로 쓴다: `^([0-9a-zA-Z][_-]?){1,100}$`
+ * 즉 숫자로 시작해도 되고 하이픈(-)·밑줄(_)도 쓸 수 있다. 다만 구분자는 연속으로 둘 수 없다.
+ *
+ * 예전에는 `^[A-Za-z][A-Za-z0-9_]{0,99}$`로 더 좁게 잡고 있었는데,
+ * 정작 운영 중인 봇의 인텐트가 전부 `Q1-Self-Introduction` 꼴이라
+ * 어드민을 열자마자 오류 8개가 뜨고 발행 버튼이 잠기는 상태였다.
+ * (.lex-export-HHR-Bot/BotLocales/ko_KR/Intents 를 보면 AWS가 실제로 받아준 이름이다.)
+ */
+export const INTENT_ID = /^([0-9a-zA-Z][_-]?){1,100}$/;
 
 /** `order` 순으로 정렬한다. 값이 같으면 원래 순서를 유지한다. */
 export const sorted = (entries: Entry[]): Entry[] =>

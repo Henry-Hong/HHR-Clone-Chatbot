@@ -180,6 +180,12 @@ export default function EntryListPanel({
               <div
                 role="button"
                 tabIndex={0}
+                /*
+                 * aria-label이 없으면 손잡이의 title("드래그해서 순서 변경")이 행 전체의
+                 * 이름으로 잡혀서, 스크린리더가 11개 항목을 전부 같은 이름으로 읽는다.
+                 */
+                aria-label={entry.title || entry.id}
+                aria-pressed={selectedId === entry.id}
                 onClick={() => onSelect(entry.id)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
@@ -196,9 +202,11 @@ export default function EntryListPanel({
                   .filter(Boolean)
                   .join(' ')}
               >
-                <span {...drag.handleProps(index)} className="admin-entry__grip" title="드래그해서 순서 변경">
-                  <Icon icon="drag-handle-vertical" size={12} />
-                </span>
+                <Tooltip compact content="드래그해서 순서 변경" placement="right">
+                  <span {...drag.handleProps(index)} className="admin-entry__grip" aria-hidden="true">
+                    <Icon icon="drag-handle-vertical" size={12} />
+                  </span>
+                </Tooltip>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="admin-entry__line">

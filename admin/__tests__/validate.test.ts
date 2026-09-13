@@ -24,7 +24,7 @@ test('id가 중복되면 오류', () => {
 });
 
 test('Lex 인텐트 이름 규칙을 어기면 오류', () => {
-  for (const id of ['1Intent', '자기소개', 'has-dash', 'has space', '']) {
+  for (const id of ['자기소개', 'has space', 'has--double', '_leading', '']) {
     const messages = errorMessages(contentWithSystem([entry({ id })]));
     assert.ok(
       messages.some((m) => m.includes('Lex 인텐트 이름')),
@@ -33,8 +33,10 @@ test('Lex 인텐트 이름 규칙을 어기면 오류', () => {
   }
 });
 
+// Lex V2의 intentName 패턴(^([0-9a-zA-Z][_-]?){1,100}$)은 숫자 시작과 하이픈을 허용한다.
+// 운영 중인 봇의 인텐트가 전부 Q1-Self-Introduction 꼴이라 여기서 막으면 어드민을 쓸 수 없다.
 test('올바른 인텐트 이름은 통과', () => {
-  for (const id of ['A', 'ResumeIntent', 'Intent_2']) {
+  for (const id of ['A', 'ResumeIntent', 'Intent_2', 'Q1-Self-Introduction', '1Intent', 'Q5-react19-feature']) {
     const messages = errorMessages(contentWithSystem([entry({ id })]));
     assert.equal(
       messages.some((m) => m.includes('Lex 인텐트 이름')),

@@ -16,7 +16,7 @@ const LINKS = [
   { label: 'GitHub', href: 'https://github.com/Henry-Hong', Logo: GithubLogo },
   {
     label: 'Notion',
-    href: 'https://kfo5a5rloe.execute-api.ap-northeast-2.amazonaws.com/THIS_IS_MY_STAGE/redirect?type=blog&from=chatbot',
+    href: 'https://ln.devheerim.com/blog?from=chatbot',
     Logo: NotionLogo,
   },
   { label: 'LinkedIn', href: 'https://www.linkedin.com/in/heerim/', Logo: LinkedinLogo },

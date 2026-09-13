@@ -72,7 +72,7 @@ const checkStructure = (content: ContentFile, push: (issue: Issue) => void) => {
         level: 'error',
         entryId: entry.id,
         message: `id "${entry.id}"는 Lex 인텐트 이름으로 쓸 수 없어요.`,
-        hint: '영문자로 시작하고 영문/숫자/밑줄만 (예: ResumeIntent)',
+        hint: '영문·숫자로 시작하고 영문/숫자/밑줄(_)/하이픈(-)만 (예: Q1-Self-Introduction)',
       });
     }
 

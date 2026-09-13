@@ -124,3 +124,34 @@ test('콘텐츠가 없으면 편집을 무시한다', () => {
   assert.equal(reducer(initialState, { type: 'edit', recipe: rename('B') }), initialState);
   assert.equal(reducer(initialState, { type: 'undo' }), initialState);
 });
+
+/* -------------------------------------------------------------------------- */
+/*                            dirty는 이력 위치를 따른다                        */
+/* -------------------------------------------------------------------------- */
+
+test('전부 되돌리면 dirty가 풀린다', () => {
+  let state = reducer(loaded(), { type: 'edit', recipe: rename('B') });
+  state = reducer(state, { type: 'edit', recipe: rename('C') });
+  assert.equal(state.dirty, true);
+
+  state = reducer(state, { type: 'undo' });
+  assert.equal(state.dirty, true);
+
+  state = reducer(state, { type: 'undo' });
+  assert.equal(state.dirty, false, '저장된 시점으로 돌아왔으면 저장할 게 없다');
+
+  state = reducer(state, { type: 'redo' });
+  assert.equal(state.dirty, true);
+});
+
+test('저장한 지점으로 되돌아오면 dirty가 풀린다', () => {
+  let state = reducer(loaded(), { type: 'edit', recipe: rename('B') });
+  state = reducer(state, { type: 'saved', updatedAt: '2024-01-01T00:00:00.000Z' });
+  assert.equal(state.dirty, false);
+
+  state = reducer(state, { type: 'edit', recipe: rename('C') });
+  assert.equal(state.dirty, true);
+
+  state = reducer(state, { type: 'undo' });
+  assert.equal(state.dirty, false);
+});

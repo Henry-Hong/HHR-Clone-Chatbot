@@ -46,6 +46,15 @@ export default function IssuesPanel({ issues, entries, onSelect }: Props) {
           intent={issue.level === 'error' ? 'danger' : 'warning'}
           icon={issue.level === 'error' ? 'error' : 'warning-sign'}
           style={{ cursor: issue.entryId ? 'pointer' : 'default' }}
+          /* 클릭하면 해당 항목으로 가는데, 마우스로만 될 이유가 없다 */
+          role={issue.entryId ? 'button' : undefined}
+          tabIndex={issue.entryId ? 0 : undefined}
+          onKeyDown={(event: React.KeyboardEvent) => {
+            if (!issue.entryId) return;
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            onSelect(issue.entryId);
+          }}
           onClick={() => issue.entryId && onSelect(issue.entryId)}
         >
           <div style={{ fontSize: 12 }}>{issue.message}</div>

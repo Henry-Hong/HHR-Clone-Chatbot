@@ -30,6 +30,35 @@ const DAY_OPTIONS = [
 ];
 
 /**
+ * 서버가 던진 문자열을 그대로 보여주면 "spawn aws ENOENT" 같은 게 뜼다.
+ * 어드민을 여는 입장에선 원인보다 "뭐를 해야 하는지"가 먼저다.
+ */
+const explain = (error: string): { title: string; body: string } => {
+  if (/ENOENT|not found|command not found/i.test(error)) {
+    return {
+      title: 'AWS CLI를 찾지 못했어요',
+      body: '미응답 목록은 CloudWatch 로그를 읽어오므로 aws CLI가 설치돼 있어야 합니다. 설치 후 어드민을 다시 실행해주세요.',
+    };
+  }
+  if (/credential|ExpiredToken|AccessDenied|UnrecognizedClient|not authorized/i.test(error)) {
+    return {
+      title: 'AWS 권한이 모자라요',
+      body: 'AWS_PROFILE이 맞는지, 그리고 해당 프로필에 CloudWatch 로그 그룹 읽기 권한이 있는지 확인해주세요.',
+    };
+  }
+  if (/ResourceNotFound|log group/i.test(error)) {
+    return {
+      title: '로그 그룹이 없어요',
+      body: '챗봇 Lambda가 아직 한 번도 안 돌았거나 로그 그룹 이름이 바뀌었을 수 있습니다.',
+    };
+  }
+  return {
+    title: '불러오지 못했어요',
+    body: '잠시 뒤에 다시 불러오거나, 아래 원문 오류를 확인해주세요.',
+  };
+};
+
+/**
  * CloudWatch에서 `hit:false` 로그를 모아 빈도순으로 보여준다.
  * = 사람들이 물어봤는데 답을 못 한 질문 목록.
  *
@@ -57,11 +86,16 @@ export default function UnansweredPanel({ items, error, loading, days, onDays, o
         </Callout>
 
         {error && (
-          <Callout intent="danger" compact icon="error" title="불러오지 못했어요">
-            {error}
-            <div className={`${Classes.TEXT_MUTED} admin-hint`} style={{ marginTop: 'var(--sp-1)' }}>
-              AWS 자격증명(`AWS_PROFILE`)과 CloudWatch 로그 그룹 권한을 확인하세요.
-            </div>
+          <Callout intent="danger" compact icon="error" title={explain(error).title}>
+            <div>{explain(error).body}</div>
+            {/*
+             * 원문은 접어둔다. "spawn aws ENOENT" 같은 걸 본문으로 깔아두면
+             * 뭐를 해야 하는지는 안 보이고 화면만 시끄러워진다.
+             */}
+            <details className={`${Classes.TEXT_MUTED} admin-hint`} style={{ marginTop: 'var(--sp-1)' }}>
+              <summary style={{ cursor: 'pointer' }}>원문 오류</summary>
+              <code style={{ wordBreak: 'break-all' }}>{error}</code>
+            </details>
           </Callout>
         )}
 
