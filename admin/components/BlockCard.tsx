@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Button,
   ButtonGroup,
@@ -112,13 +113,20 @@ export default function BlockCard({
 function VariationHeader({ count, onAdd }: { count: number; onAdd: () => void }) {
   return (
     <div className="admin-inline">
-      {/* 설명을 항상 펼쳐 두면 블록마다 두세 줄씩 반복돼 편집 영역이 시끄러워진다 */}
+      {/*
+       * 변형이 없는 블록이 훨씬 많다. "변형 0" 태그를 항상 깔아두면
+       * 블록마다 의미 없는 0이 반복돼 편집 영역이 시끄러워진다. 있을 때만 보여준다.
+       */}
+      {count > 0 && (
+        <Tooltip compact content="같은 질문에 매번 다른 답이 나가게 합니다. 답할 때 원본 포함 하나를 무작위로 고릅니다.">
+          <Tag minimal icon="multi-select" interactive>
+            변형 {count}
+          </Tag>
+        </Tooltip>
+      )}
       <Tooltip compact content="같은 질문에 매번 다른 답이 나가게 합니다. 답할 때 원본 포함 하나를 무작위로 고릅니다.">
-        <Tag minimal icon="comparison" interactive>
-          변형 {count}
-        </Tag>
+        <Button size="small" variant="minimal" icon="add" text="변형" onClick={onAdd} />
       </Tooltip>
-      <Button size="small" variant="minimal" icon="add" text="변형" onClick={onAdd} />
     </div>
   );
 }
@@ -175,14 +183,37 @@ function TextBody({ block, onChange }: { block: TextBlock; onChange: Change }) {
 /*                                    이미지                                    */
 /* -------------------------------------------------------------------------- */
 
-const Thumb = ({ src }: { src: string }) =>
-  /^https?:\/\//.test(src) ? (
-    <img className="admin-thumb" src={src} alt="" loading="lazy" />
-  ) : (
-    <div className="admin-thumb admin-thumb--empty">
-      <Icon icon="media" size={14} />
-    </div>
-  );
+/**
+ * URL 형식만 보고 `<img>`를 그대로 걸면, 핫링크가 막힌 주소에서 브라우저 기본
+ * "깨진 이미지" 아이콘이 튜어나와 어드민이 고장난 것처럼 보인다.
+ * 로드에 실패했다는 걸 상태로 잡아서 대신 알려준다. (검증은 형식만 보므로 여기서만 알 수 있다)
+ */
+function Thumb({ src }: { src: string }) {
+  const [failed, setFailed] = useState(false);
+
+  // URL을 고치면 다시 시도해야 한다
+  useEffect(() => setFailed(false), [src]);
+
+  if (!/^https?:\/\//.test(src)) {
+    return (
+      <div className="admin-thumb admin-thumb--empty">
+        <Icon icon="media" size={14} />
+      </div>
+    );
+  }
+
+  if (failed) {
+    return (
+      <Tooltip compact content="이 주소에서 이미지를 불러오지 못했어요. 챗봇에서도 똑같이 안 보입니다.">
+        <div className="admin-thumb admin-thumb--broken">
+          <Icon icon="warning-sign" size={14} intent="danger" />
+        </div>
+      </Tooltip>
+    );
+  }
+
+  return <img className="admin-thumb" src={src} alt="" loading="lazy" onError={() => setFailed(true)} />;
+}
 
 type ImageFieldValues = { src: string; alt?: string; caption?: string };
 

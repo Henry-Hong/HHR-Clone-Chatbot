@@ -169,11 +169,15 @@ export default function AppNavbar({
 
         <NavbarDivider />
 
+        {/*
+         * 네비게이션 오른쪽 끝 버튼들이라 기본 배치(왼쪽)로 두면 툴팁이 옆의 "발행" 버튼을 덮는다.
+         * 아래로 내려서 다른 컨트롤을 가리지 않게 한다.
+         */}
         <ButtonGroup variant="minimal">
-          <Tooltip content="실행 로그" compact>
+          <Tooltip content="실행 로그" compact placement="bottom">
             <Button icon="console" disabled={!hasLog} onClick={onOpenLog} aria-label="실행 로그" />
           </Tooltip>
-          <Tooltip content={dark ? '밝은 테마로' : '어두운 테마로'} compact>
+          <Tooltip content={dark ? '밝은 테마로' : '어두운 테마로'} compact placement="bottom-end">
             <Button icon={dark ? 'flash' : 'moon'} onClick={onToggleDark} aria-label="테마 전환" />
           </Tooltip>
         </ButtonGroup>

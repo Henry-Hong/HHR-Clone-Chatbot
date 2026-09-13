@@ -103,7 +103,7 @@ export function NewEntryDialog({
   const error = !effectiveId
     ? 'id를 입력해주세요. 제목이 한글이면 자동으로 만들어지지 않습니다.'
     : !validId
-      ? '영문자로 시작하고 영문·숫자·밑줄만 쓸 수 있어요.'
+      ? '영문·숫자로 시작하고 영문·숫자·밑줄(_)·하이픈(-)만 쓸 수 있어요. (- _ 를 연속으로 둘 수는 없어요)'
       : duplicate
         ? '이미 있는 id예요.'
         : null;
@@ -129,7 +129,7 @@ export function NewEntryDialog({
           <InputGroup
             value={effectiveId}
             intent={error ? 'danger' : 'none'}
-            placeholder="예: FavoriteStackIntent"
+            placeholder="예: Q9-Favorite-Stack"
             onValueChange={(next) => {
               setTouchedId(true);
               setId(next);
