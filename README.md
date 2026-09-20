@@ -117,6 +117,46 @@ type Action =
 <br >
 <br >
 
+# 대화 로그
+
+Lex 자체 대화 로그(conversation logs)는 **켜지 않았습니다.**
+이 봇은 슬롯도 음성도 없는 순수 인텐트 분류기라, Lex 로그가 줄 수 있는 것이
+이미 Lambda가 남기는 것과 거의 같기 때문입니다. 로그 그룹만 둘로 늘어납니다.
+
+대신 `hhr-clone-lex-invoke` 가 매 요청마다 한 줄씩 남깁니다:
+
+```json
+{"evt":"chat","ts":1789203477562,"sid":"77fae5835823","locale":"ko",
+ "q":"자기소개","ms":1323,"intent":"Q1-Self-Introduction","conf":1,"hit":true,"blocks":3}
+```
+
+Lex 로그에는 없는 응답 지연(`ms`)과 블록 수(`blocks`)까지 들어있고,
+`sessionId` 는 원본이 아니라 해시(`sid`)로 남깁니다.
+
+### 링크 클릭 알림과 이어붙이기
+
+이력서·포트폴리오 링크는 [ln 단축기](https://ln.devheerim.com)를 거쳐서
+클릭 순간 디스코드로 알림이 옵니다. 그런데 두 로그에 곹통 식별자가 없어서
+"알림이 온 그 사람이 무슨 질문을 했는지"를 알 수 없었습니다.
+
+그래서 응답에 `sid` 를 실어 내리고, 프론트가 ln 링크에만 `?s=` 로 붙입니다.
+(`src/utils/lnLink.ts`)
+
+```
+POST /  →  { sid: "77fae5835823", blocks: [...] }
+              ↓
+https://ln.devheerim.com/cv?from=chatbot&s=77fae5835823
+              ↓
+ln 클릭 로그·디스코드 알림 → 해당 대화 CloudWatch 링크
+```
+
+첫 응답 전에 눌린 링크는 태그 없이 나갑니다. 이어붙일 대화가 없다는 뜻이므로
+의도된 동작입니다. 원본 `sessionId` 가 아니라 해시를 보내므로,
+이 값이 외부 도메인에 노출돼도 Lex 세션을 가로채지 않습니다.
+
+<br >
+<br >
+
 # Teams
 
 | <img src="https://avatars.githubusercontent.com/u/17701725?v=4,Henry-Hong,heerim,https://github.com/Henry-Hong" width="150" height="150"/> | <img src="https://avatars.githubusercontent.com/u/17701725?v=4,Henry-Hong,heerim,https://github.com/Henry-Hong" width="150" height="150"/> |

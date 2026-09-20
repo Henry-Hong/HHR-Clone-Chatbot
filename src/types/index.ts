@@ -14,6 +14,13 @@ export type TypeRequestChat = {
 
 /** 서버 응답. 답변 본문은 Lex가 아니라 S3 content에서 온다. */
 export type TypeResponseChat = {
+  /**
+   * 대화 세션 태그. 서버 로그의 `sid`와 같은 값이며, ln 단축링크에 `?s=`로 실어
+   * 클릭 알림과 대화 로그를 잇는 데 쓴다. (@/utils/lnLink)
+   *
+   * 클라이언트가 만든 chat(초기 인사·에러 등)에는 없으므로 optional이다.
+   */
+  sid?: string;
   locale: Locale;
   /** 매칭된 Lex 인텐트 이름. 매칭 실패 시 'FallbackIntent' */
   intent: string | null;

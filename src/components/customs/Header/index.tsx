@@ -10,6 +10,8 @@ import GithubLogo from '@/assets/svgs/ic_github.svg?react';
 import LinkedinLogo from '@/assets/svgs/ic_linkedin.svg?react';
 import NotionLogo from '@/assets/svgs/ic_notion.svg?react';
 import Dialog from '@/components/cores/Dialog';
+import { useSessionTag } from '@/hooks/useSessionTag';
+import { taggedLink } from '@/utils/lnLink';
 import LabeldText from './LabldText';
 
 const LINKS = [
@@ -23,6 +25,10 @@ const LINKS = [
 ];
 
 export default function Header() {
+  // Notion 링크만 ln 단축링크라 태그가 붙는다. 대화 전에 눌리면 태그 없이 나가는데,
+  // 그건 "한 마디도 안 하고 나간 방문자"라는 정보로 그대로 쓸모가 있다.
+  const sessionTag = useSessionTag();
+
   return (
     <Flex className="w-full justify-center p-2 h-[64px] fixed top-0 shadow-md z-10 bg-white">
       <Dialog>
@@ -36,7 +42,7 @@ export default function Header() {
               {LINKS.map(({ label, href, Logo }) => (
                 <a
                   key={label}
-                  href={href}
+                  href={taggedLink(href, sessionTag)}
                   target="_blank"
                   rel="noreferrer"
                   aria-label={label}
