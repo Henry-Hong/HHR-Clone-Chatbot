@@ -9,7 +9,7 @@ import {
   MenuDivider,
   MenuItem,
   NonIdealState,
-  Popover,
+  PopoverNext,
   Tag,
   Tooltip,
 } from '@blueprintjs/core';
@@ -109,7 +109,8 @@ export default function EntryListPanel({
             ) : undefined
           }
         />
-        <Popover
+        {/* 구버전 Popover는 React 19에서 위치 계산을 포기한다 (AppNavbar 주석 참고) */}
+        <PopoverNext
           placement="bottom-end"
           content={
             <Menu>
@@ -128,7 +129,7 @@ export default function EntryListPanel({
           <Tooltip content={`보기: ${FILTER_LABEL[filter]}`} compact>
             <Button icon="filter" variant={filter === 'all' ? 'minimal' : 'solid'} intent={filter === 'all' ? 'none' : 'primary'} aria-label="필터" />
           </Tooltip>
-        </Popover>
+        </PopoverNext>
       </div>
 
       <div className="admin-scroll" style={{ flex: 1 }}>

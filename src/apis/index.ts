@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { preload } from 'react-dom';
+import { rememberSessionTag } from '@/utils/lnLink';
 import type { Block, Locale, TypeResponseChat } from '@/types';
 
 const BASE_URL = 'https://2bs7x43h1j.execute-api.ap-northeast-2.amazonaws.com/v1';
@@ -47,6 +48,9 @@ export const useChatMutation = () => {
 
       const data = (await response.json()) as TypeResponseChat;
       if (data.error) throw new Error(data.error);
+
+      // 서버가 준 세션 태그를 기억해 ln 링크에 붙인다 (@/utils/lnLink)
+      rememberSessionTag(data.sid);
 
       // 인위적 지연(waitAtLeast) 동안 이미지를 미리 받아둔다
       collectImageUrls(data.blocks ?? []).forEach((url) => preload(url, { as: 'image' }));

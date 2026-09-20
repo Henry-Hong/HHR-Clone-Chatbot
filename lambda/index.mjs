@@ -194,12 +194,24 @@ export const handler = async (event) => {
   const startedAt = Date.now();
   const { text, locale, sessionId } = parseEvent(event);
 
+  /**
+   * 로그의 `sid`와 같은 값을 응답으로도 내려준다.
+   *
+   * 프론트는 이 값을 ln 단축링크에 `?s=` 로 붙이고, ln-redirect가 그대로
+   * 클릭 로그에 남긴다. 덕분에 "디스코드 알림이 온 그 클릭"과 "CloudWatch의
+   * 그 대화"를 타임스탬프 추정이 아니라 키로 이을 수 있다.
+   *
+   * 원본 sessionId가 아니라 해시를 쓰는 이유: 이 값은 외부 도메인(ln)의
+   * 쿼리스트링에 실려 나가므로, 유출돼도 Lex 세션을 가로챌 수 없어야 한다.
+   */
+  const sid = hashSession(sessionId);
+
   const log = (extra) =>
     console.log(
       JSON.stringify({
         evt: 'chat',
         ts: startedAt,
-        sid: hashSession(sessionId),
+        sid,
         locale,
         q: text,
         ms: Date.now() - startedAt,
@@ -209,7 +221,7 @@ export const handler = async (event) => {
 
   if (!text) {
     log({ intent: null, hit: false, err: 'empty_text' });
-    return { locale, intent: null, confidence: 0, fallback: true, blocks: [], messages: [], metadatas: { confidence: 0 } };
+    return { sid, locale, intent: null, confidence: 0, fallback: true, blocks: [], messages: [], metadatas: { confidence: 0 } };
   }
 
   try {
@@ -235,6 +247,7 @@ export const handler = async (event) => {
       const fallbackBlocks = blocksFor(content, '__fallback', locale) ?? [];
       log({ intent, conf: confidence, hit: false });
       return {
+        sid,
         locale,
         intent,
         confidence,
@@ -248,6 +261,7 @@ export const handler = async (event) => {
 
     log({ intent, conf: confidence, hit: true, blocks: blocks.length });
     return {
+      sid,
       locale,
       intent,
       confidence,
@@ -260,6 +274,7 @@ export const handler = async (event) => {
     console.error(JSON.stringify({ evt: 'chat_error', q: text, locale, err: error.message }));
     log({ intent: null, hit: false, err: error.name });
     return {
+      sid,
       locale,
       intent: null,
       confidence: 0,

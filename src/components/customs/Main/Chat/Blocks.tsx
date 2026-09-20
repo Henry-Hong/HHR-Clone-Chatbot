@@ -2,6 +2,8 @@ import Dialog from '@/components/cores/Dialog';
 import Flex from '@/components/cores/Flex';
 import Image from '@/components/cores/Image';
 import { useAppContext } from '@/contexts';
+import { useSessionTag } from '@/hooks/useSessionTag';
+import { taggedLink } from '@/utils/lnLink';
 import { CircleX, Link } from 'lucide-react';
 import type { Action, Block } from '@/types';
 import { twMerge } from 'tailwind-merge';
@@ -111,9 +113,12 @@ function GalleryBlock({ images }: { images: { src: string; alt?: string }[] }) {
 /* -------------------------------------------------------------------------- */
 
 function LinkAction({ action }: { action: Extract<Action, { kind: 'link' }> }) {
+  // ln 단축링크일 때만 세션 태그가 붙는다. 그 외 도메인은 원본 그대로.
+  const sessionTag = useSessionTag();
+
   return (
     <a
-      href={action.url}
+      href={taggedLink(action.url, sessionTag)}
       target="_blank"
       rel="noreferrer"
       className="rounded-full p-1 px-3 border-[2px] text-gray-500 border-blue-500 transition-all hover:bg-gray-100 shrink-0 shadow-md"
